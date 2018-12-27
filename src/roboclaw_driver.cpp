@@ -1,9 +1,29 @@
-//
-// Created by Carroll Vance on 2018-12-26.
-//
+/**
+ *
+ * Copyright (c) 2018 Carroll Vance.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ */
 
-#include "../include/roboclaw_driver.h"
+#include "roboclaw_driver.h"
 
+#include <vector>
 #include <boost/bind.hpp>
 #include <boost/array.hpp>
 
@@ -53,25 +73,45 @@ namespace roboclaw {
         return crc;
     }
 
-    unsigned char driver::cmd8(unsigned char address, unsigned char command, unsigned char data, bool append_crc) {
+    unsigned char driver::txrx(unsigned char address,
+            unsigned char command,
+            unsigned char* tx_data,
+            unsigned int tx_length,
+            unsigned char* rx_data,
+            unsigned int rx_length,
+            bool tx_crc, bool rx_crc) {
 
-        if(append_crc) {
-            boost::array<unsigned char, 5> packet = {address, command, data, 0, 0};
+        std::vector<unsigned char> packet;
 
-            unsigned int crc = crc16(&packet[0], 3);
+        if (tx_crc)
+            packet.reserve(tx_length + 4);
+        else
+            packet.reserve(tx_length + 2);
+
+        // Header
+        packet[0] = address;
+        packet[1] = command;
+
+        // Data
+        memcpy(&packet[2], tx_data, tx_length);
+
+        // CRC
+        if (tx_crc) {
+            unsigned int crc = crc16(&packet[0], tx_length + 2);
 
             // RoboClaw expects big endian / MSB first
-            packet[3] = (unsigned char) ((crc >> 8) & 0xFF);
-            packet[4] = (unsigned char) (crc & 0xFF);
+            packet[tx_length + 2] = (unsigned char) ((crc >> 8) & 0xFF);
+            packet[tx_length + 2 + 1] = (unsigned char) (crc & 0xFF);
 
-            serial->write_some(boost::asio::buffer(packet));
-        }else {
-            boost::array<unsigned char, 3> packet = {address, command, data};
-
-            serial->write_some(boost::asio::buffer(packet));
         }
 
-        boost::array<unsigned char, 1> response = {0};
+        serial->write_some(boost::asio::buffer(packet));
+
+        std::vector<unsigned char> response;
+        if(rx_crc)
+            response.reserve(rx_length + 2);
+        else
+            response.reserve(rx_length);
 
         bool timeout = false;
         bool error = false;
@@ -98,6 +138,23 @@ namespace roboclaw {
                 throw timeout_exception("Roboclaw read timed out");
             else
                 throw std::runtime_error(error_code.message());
+        }
+
+        // Copy response back
+        memcpy(rx_data, &response[0], rx_length);
+
+        // Check CRC
+        if(rx_crc){
+            unsigned int crc_calculated = crc16(&response[0], rx_length);
+            unsigned int crc_received = 0;
+
+            // RoboClaw generates big endian / MSB first
+            crc_received += response[rx_length] << 8;
+            crc_received += response[rx_length+1];
+
+            if(crc_calculated != crc_received)
+                throw std::runtime_error("Roboclaw CRC mismatch");
+
         }
 
         return response[0];

@@ -49,10 +49,10 @@ find_package(Boost REQUIRED COMPONENTS system)
 
 ## Generate messages in the 'msg' folder
 add_message_files(
-   FILES
-   RoboclawEncoderSteps.msg
-   RoboclawMotorSpeed.msg
- )
+        FILES
+        RoboclawMotorVelocity.msg
+        RoboclawEncoderSteps.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -69,10 +69,12 @@ add_message_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   geometry_msgs#   nav_msgs#   std_msgs
-# )
+generate_messages(
+        DEPENDENCIES
+        geometry_msgs
+        nav_msgs
+        std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -117,7 +119,8 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-        # include
+        ../../devel/
+        include
         ${catkin_INCLUDE_DIRS}
 )
 
