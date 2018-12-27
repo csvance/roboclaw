@@ -37,8 +37,11 @@ namespace roboclaw {
     class roscore {
     public:
         roscore(ros::NodeHandle nh, ros::NodeHandle nh_private);
+        void run();
     private:
         driver* roboclaw;
+
+        std::map<int, unsigned char> roboclaw_mapping;
 
         ros::NodeHandle nh;
         ros::NodeHandle nh_private;

@@ -37,31 +37,32 @@ namespace roboclaw {
     public:
         driver(std::string &port);
 
-        driver(std::string &port, std::shared_ptr<std::map<int, unsigned char>> address_map);
-
         ~driver();
 
         void set_baud(unsigned int baudrate);
+
+        std::string get_version(unsigned char address);
+        std::pair<int, int> get_encoders(unsigned char address);
+        std::pair<int, int> get_velocity(unsigned char address);
+
+        void set_speed(unsigned char address, std::pair<int, int> speed);
+
+        void reset_encoders(unsigned char address);
 
         static unsigned char BASE_ADDRESS;
         static unsigned int DEFAULT_BAUDRATE;
 
     private:
-        std::shared_ptr<std::map<int, unsigned char>> address_map;
         std::shared_ptr<boost::asio::serial_port> serial;
         boost::asio::io_service io;
 
         void init_serial(std::string &port, unsigned int baudrate = DEFAULT_BAUDRATE);
 
-        static unsigned int crc16(unsigned char *packet, int nBytes);
+        static unsigned int crc16(unsigned char *packet, size_t nBytes);
 
-        unsigned char txrx(unsigned char address, unsigned char command, unsigned char *tx_data, unsigned int tx_length,
-                           unsigned char *rx_data, unsigned int rx_length, bool tx_crc = false, bool rx_crc = false);
+        size_t txrx(unsigned char address, unsigned char command, unsigned char *tx_data, size_t tx_length,
+                           unsigned char *rx_data, size_t rx_length, bool tx_crc = false, bool rx_crc = false);
 
-
-        void timeout_handler();
-
-        void read_callback();
 
     };
 
@@ -70,5 +71,24 @@ namespace roboclaw {
         using std::runtime_error::runtime_error;
     };
 
+    // trim from start (in place)
+    static inline void ltrim(std::string &s) {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+            return !std::isspace(ch);
+        }));
+    }
+
+// trim from end (in place)
+    static inline void rtrim(std::string &s) {
+        s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+            return !std::isspace(ch);
+        }).base(), s.end());
+    }
+
+// trim from both ends (in place)
+    static inline void trim(std::string &s) {
+        ltrim(s);
+        rtrim(s);
+    }
 }
 #endif //PROJECT_ROBOCLAWDRIVER_H

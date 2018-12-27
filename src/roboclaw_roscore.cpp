@@ -42,9 +42,9 @@ namespace roboclaw {
         nh_private.param("baudrate", baudrate, (int) driver::DEFAULT_BAUDRATE);
         nh_private.param("roboclaws", num_roboclaws, 0);
 
-        if (num_roboclaws > 0) {
+        roboclaw_mapping = std::map<int, unsigned char>();
 
-            std::shared_ptr<std::map<int, unsigned char>> roboclaw_mapping(new std::map<int, unsigned char>());
+        if (num_roboclaws > 0) {
 
             // Create address map
             for (int i = 0; i < num_roboclaws; i++) {
@@ -55,23 +55,30 @@ namespace roboclaw {
 
                 nh_private.param(param_name.str(), address);
 
-                roboclaw_mapping->insert(std::pair<int, unsigned char>(i, (unsigned char) address));
+                roboclaw_mapping.insert(std::pair<int, unsigned char>(i, driver::BASE_ADDRESS + i));
             }
 
-            roboclaw = new driver(serial_port, roboclaw_mapping);
+            roboclaw = new driver(serial_port);
 
         } else {
             num_roboclaws = 1;
             roboclaw = new driver(serial_port);
+
+            roboclaw_mapping.insert(std::pair<int, unsigned char>(0, driver::BASE_ADDRESS));
         }
 
         roboclaw->set_baud((unsigned int) baudrate);
 
         encoder_pub = nh_private.advertise<roboclaw::RoboclawEncoderSteps>(std::string("enc_steps"), 10);
         velocity_sub = nh.subscribe(std::string("vel_cmd"), 10, &roscore::velocity_callback, this);
+
     }
 
     void roscore::velocity_callback(const roboclaw::RoboclawMotorVelocity &msg){
+
+    }
+
+    void roscore::run(){
 
     }
 
