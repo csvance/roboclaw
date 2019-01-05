@@ -58,7 +58,7 @@ namespace roboclaw {
         roboclaw = new driver(serial_port);
         roboclaw->set_baud((unsigned int) baudrate);
 
-        for(int r=0; r< roboclaw_mapping.size(); r++)
+        for (int r = 0; r < roboclaw_mapping.size(); r++)
             roboclaw->reset_encoders(roboclaw_mapping[r]);
 
         encoder_pub = nh_private.advertise<roboclaw::RoboclawEncoderSteps>(std::string("motor_enc"), 10);
@@ -66,16 +66,16 @@ namespace roboclaw {
 
     }
 
-    void roboclaw_roscore::velocity_callback(const roboclaw::RoboclawMotorVelocity &msg){
+    void roboclaw_roscore::velocity_callback(const roboclaw::RoboclawMotorVelocity &msg) {
         roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(msg.mot1_vel_sps, msg.mot2_vel_sps));
     }
 
-    void roboclaw_roscore::run(){
+    void roboclaw_roscore::run() {
         ros::Rate update_rate(10);
-        while(ros::ok()){
+        while (ros::ok()) {
 
             // Publish encoders
-            for(int r=0; r<roboclaw_mapping.size(); r++) {
+            for (int r = 0; r < roboclaw_mapping.size(); r++) {
 
                 std::pair<int, int> encs = roboclaw->get_encoders(roboclaw_mapping[r]);
 

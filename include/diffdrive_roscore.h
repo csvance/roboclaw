@@ -36,6 +36,7 @@ namespace roboclaw {
     class diffdrive_roscore {
     public:
         diffdrive_roscore(ros::NodeHandle nh, ros::NodeHandle nh_private);
+
     private:
         ros::NodeHandle nh;
         ros::NodeHandle nh_private;
@@ -58,6 +59,7 @@ namespace roboclaw {
         double wheel_radius;
 
         void twist_callback(const geometry_msgs::Twist &msg);
+
         void encoder_callback(const roboclaw::RoboclawEncoderSteps &msg);
     };
 

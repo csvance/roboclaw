@@ -30,7 +30,7 @@
 #include <cmath>
 
 
-namespace roboclaw{
+namespace roboclaw {
 
     diffdrive_roscore::diffdrive_roscore(ros::NodeHandle nh, ros::NodeHandle nh_private) {
 
@@ -53,27 +53,27 @@ namespace roboclaw{
 
     }
 
-    void diffdrive_roscore::twist_callback(const geometry_msgs::Twist &msg){
+    void diffdrive_roscore::twist_callback(const geometry_msgs::Twist &msg) {
 
         // TODO: Calculate velocities
         roboclaw::RoboclawMotorVelocity motor_vel;
 
-        if(abs(msg.linear.x) + abs(msg.linear.y) + abs(msg.linear.z) != 0){
+        if (abs(msg.linear.x) + abs(msg.linear.y) + abs(msg.linear.z) != 0) {
 
-        }else if(abs(msg.angular.x) + abs(msg.angular.y) + abs(msg.angular.z) != 0){
+        } else if (abs(msg.angular.x) + abs(msg.angular.y) + abs(msg.angular.z) != 0) {
 
-        }else{
+        } else {
 
         }
     }
 
-    void diffdrive_roscore::encoder_callback(const roboclaw::RoboclawEncoderSteps &msg){
+    void diffdrive_roscore::encoder_callback(const roboclaw::RoboclawEncoderSteps &msg) {
 
         int delta_1 = last_steps_1 - msg.mot1_enc_steps;
         int delta_2 = last_steps_2 - msg.mot2_enc_steps;
 
-        double u_w = (delta_1 + delta_2) / 2.0;
-        double u_p = (delta_2 - delta_1);
+        double u_w = ((delta_1 + delta_2) / steps_per_meter) / 2.0;
+        double u_p = ((delta_2 - delta_1) / steps_per_meter);
 
         double delta_x = wheel_radius * u_w * cos(last_theta);
         double delta_y = wheel_radius * u_w * sin(last_theta);

@@ -43,10 +43,13 @@ namespace roboclaw {
         void set_baud(unsigned int baudrate);
 
         std::string get_version(unsigned char address);
+
         std::pair<int, int> get_encoders(unsigned char address);
+
         std::pair<int, int> get_velocity(unsigned char address);
 
         void set_velocity(unsigned char address, std::pair<int, int> speed);
+
         void set_duty(unsigned char address, std::pair<int, int> duty);
 
         void reset_encoders(unsigned char address);
@@ -65,10 +68,11 @@ namespace roboclaw {
         uint16_t crc;
 
         uint16_t crc16(uint8_t *packet, size_t nBytes);
+
         void crc16_reset();
 
         size_t txrx(unsigned char address, unsigned char command, unsigned char *tx_data, size_t tx_length,
-                           unsigned char *rx_data, size_t rx_length, bool tx_crc = false, bool rx_crc = false);
+                    unsigned char *rx_data, size_t rx_length, bool tx_crc = false, bool rx_crc = false);
 
 
     };
