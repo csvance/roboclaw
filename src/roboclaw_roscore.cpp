@@ -80,7 +80,7 @@ namespace roboclaw {
     }
 
     void roscore::run(){
-        ros::Rate r(10);
+        ros::Rate update_rate(10);
         while(ros::ok()){
 
             // Publish encoders
@@ -96,7 +96,7 @@ namespace roboclaw {
 
             }
 
-            r.sleep();
+            update_rate.sleep();
         }
     }
 
