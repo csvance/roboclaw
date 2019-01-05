@@ -14,12 +14,18 @@ int main() {
     driver *roboclaw = new driver(std::string("/dev/tty.usbserial-FTZ8B103"));
     roboclaw->set_baud(115200);
 
-    roboclaw->set_duty(driver::BASE_ADDRESS, std::pair<int, int>(10000, 0));
+    roboclaw->set_velocity(driver::BASE_ADDRESS, std::pair<int, int>(5000, 5000));
 
-    sleep(1);
+    for(int i=0;i<10;i++){
+        std::pair<int, int> enc = roboclaw->get_encoders(driver::BASE_ADDRESS);
+
+        cout << i << ": " << enc.first << " " << enc.second << endl;
+
+        sleep(1);
+
+    }
 
     roboclaw->set_duty(driver::BASE_ADDRESS, std::pair<int, int>(0, 0));
-
 
     return 0;
 }

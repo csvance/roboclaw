@@ -71,6 +71,9 @@ namespace roboclaw {
     }
 
     void roboclaw_roscore::run() {
+
+        last_message = ros::Time::now();
+
         ros::Rate update_rate(10);
         while (ros::ok()) {
 
@@ -86,6 +89,10 @@ namespace roboclaw {
                 encoder_pub.publish(enc_steps);
 
             }
+
+            if (ros::Time::now() - last_message > ros::Duration(5))
+                for (int r = 0; r < roboclaw_mapping.size(); r++) {
+                    roboclaw->set_duty(roboclaw_mapping[r], std::pair<int, int>(0, 0));
 
             update_rate.sleep();
         }

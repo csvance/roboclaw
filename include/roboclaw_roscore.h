@@ -51,6 +51,8 @@ namespace roboclaw {
         ros::Publisher encoder_pub;
         ros::Subscriber velocity_sub;
 
+        ros::Time last_message;
+
         void velocity_callback(const roboclaw::RoboclawMotorVelocity &msg);
     };
 
