@@ -25,7 +25,6 @@
 
 #include <map>
 #include <string>
-#include <sstream>
 
 namespace roboclaw {
 
@@ -44,22 +43,11 @@ namespace roboclaw {
 
         roboclaw_mapping = std::map<int, unsigned char>();
 
-
+        // Create address map
         if (num_roboclaws > 1) {
 
-            // Create address map
-            for (int i = 0; i < num_roboclaws; i++) {
-                int address = 0;
-
-                std::stringstream param_name;
-                param_name << "roboclaw_address_" << i;
-
-                nh_private.param(param_name.str(), address);
-
-                roboclaw_mapping.insert(std::pair<int, unsigned char>(i, driver::BASE_ADDRESS + i));
-            }
-
-
+            for (int r = 0; r < num_roboclaws; r++)
+                roboclaw_mapping.insert(std::pair<int, unsigned char>(r, driver::BASE_ADDRESS + r));
 
         } else {
             num_roboclaws = 1;
