@@ -90,10 +90,12 @@ namespace roboclaw {
 
             }
 
-            if (ros::Time::now() - last_message > ros::Duration(5))
+            if (ros::Time::now() - last_message > ros::Duration(5)) {
                 for (int r = 0; r < roboclaw_mapping.size(); r++) {
                     roboclaw->set_duty(roboclaw_mapping[r], std::pair<int, int>(0, 0));
-
+                }
+            }
+            
             update_rate.sleep();
         }
     }
