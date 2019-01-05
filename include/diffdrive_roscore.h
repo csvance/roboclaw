@@ -58,6 +58,10 @@ namespace roboclaw {
         double steps_per_meter;
         double wheel_radius;
 
+        bool swap_motors;
+        bool invert_motor_1;
+        bool invert_motor_2;
+
         void twist_callback(const geometry_msgs::Twist &msg);
 
         void encoder_callback(const roboclaw::RoboclawEncoderSteps &msg);

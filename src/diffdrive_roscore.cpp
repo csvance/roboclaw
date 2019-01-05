@@ -21,14 +21,12 @@
         * DEALINGS IN THE SOFTWARE.
 */
 
+#include <cmath>
 
 #include "diffdrive_roscore.h"
 #include "roboclaw/RoboclawMotorVelocity.h"
 #include "geometry_msgs/Quaternion.h"
 #include "tf/transform_datatypes.h"
-
-#include <cmath>
-
 
 namespace roboclaw {
 
@@ -51,26 +49,83 @@ namespace roboclaw {
         nh_private.param("steps_per_meter", steps_per_meter);
         nh_private.param("wheel_radius", wheel_radius);
 
+        nh_private.param("swap_motors", swap_motors, false);
+        nh_private.param("invert_motor_1", invert_motor_1, false);
+        nh_private.param("invert_motor_2", invert_motor_2, false);
+
     }
 
     void diffdrive_roscore::twist_callback(const geometry_msgs::Twist &msg) {
 
-        // TODO: Calculate velocities
         roboclaw::RoboclawMotorVelocity motor_vel;
+        motor_vel.index = 0;
+        motor_vel.mot1_vel_sps = 0;
+        motor_vel.mot2_vel_sps = 0;
 
-        if (abs(msg.linear.x) + abs(msg.linear.y) + abs(msg.linear.z) != 0) {
+        // Linear
+        if(abs(msg.linear.x) + abs(msg.linear.y) != 0) {
 
-        } else if (abs(msg.angular.x) + abs(msg.angular.y) + abs(msg.angular.z) != 0) {
+            double turn_coeff;
+            double linear_coeff;
 
-        } else {
+            if (abs(msg.linear.x) >= abs(msg.linear.y)) {
+                linear_coeff = abs(msg.linear.x) / (abs(msg.linear.x) + abs(msg.linear.y));
+                turn_coeff = 1 - linear_coeff;
+            } else {
+                turn_coeff = abs(msg.linear.y) / (abs(msg.linear.x) + abs(msg.linear.y));
+                linear_coeff = 1 - turn_coeff;
+            }
+
+            // Linear
+            motor_vel.mot1_vel_sps += (int) (steps_per_meter * linear_coeff * msg.linear.x);
+            motor_vel.mot2_vel_sps += (int) (steps_per_meter * linear_coeff * msg.linear.x);
+
+            if(msg.linear.y >= 0)
+                motor_vel.mot2_vel_sps += (int) (steps_per_meter * turn_coeff * msg.linear.y);
+            else if(msg.linear.y < 0)
+                motor_vel.mot1_vel_sps += (int) (steps_per_meter * turn_coeff * msg.linear.y);
+
+        // Pure Rotational
+        }else if(abs(msg.angular.z) != 0) {
+
+            double angular_velocity = msg.angular.z * base_width/2;
+
+            motor_vel.mot1_vel_sps += (int) (steps_per_meter * angular_velocity);
+            motor_vel.mot2_vel_sps += (int) -(steps_per_meter * angular_velocity);
 
         }
+
+        if (invert_motor_1)
+            motor_vel.mot1_vel_sps = -motor_vel.mot1_vel_sps;
+
+        if (invert_motor_2)
+            motor_vel.mot2_vel_sps = -motor_vel.mot2_vel_sps;
+
+        if (swap_motors){
+            int tmp = motor_vel.mot1_vel_sps;
+            motor_vel.mot1_vel_sps = motor_vel.mot2_vel_sps;
+            motor_vel.mot2_vel_sps = tmp;
+        }
+
+        motor_pub.publish(motor_vel);
     }
 
     void diffdrive_roscore::encoder_callback(const roboclaw::RoboclawEncoderSteps &msg) {
 
-        int delta_1 = last_steps_1 - msg.mot1_enc_steps;
-        int delta_2 = last_steps_2 - msg.mot2_enc_steps;
+        int delta_1 = msg.mot1_enc_steps - last_steps_1;
+        int delta_2 = msg.mot2_enc_steps - last_steps_2;
+
+        if (invert_motor_1)
+            delta_1 = -delta_1;
+
+        if (invert_motor_2)
+            delta_1 = -delta_2;
+
+        if (swap_motors){
+            int tmp = delta_1;
+            delta_1 = delta_2;
+            delta_2 = tmp;
+        }
 
         double u_w = ((delta_1 + delta_2) / steps_per_meter) / 2.0;
         double u_p = ((delta_2 - delta_1) / steps_per_meter);
