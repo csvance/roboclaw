@@ -40,11 +40,12 @@ namespace roboclaw {
 
         nh_private.param("serial_port", serial_port);
         nh_private.param("baudrate", baudrate, (int) driver::DEFAULT_BAUDRATE);
-        nh_private.param("roboclaws", num_roboclaws, 0);
+        nh_private.param("roboclaws", num_roboclaws, 1);
 
         roboclaw_mapping = std::map<int, unsigned char>();
 
-        if (num_roboclaws > 0) {
+
+        if (num_roboclaws > 1) {
 
             // Create address map
             for (int i = 0; i < num_roboclaws; i++) {
@@ -58,15 +59,15 @@ namespace roboclaw {
                 roboclaw_mapping.insert(std::pair<int, unsigned char>(i, driver::BASE_ADDRESS + i));
             }
 
-            roboclaw = new driver(serial_port);
+
 
         } else {
             num_roboclaws = 1;
-            roboclaw = new driver(serial_port);
 
             roboclaw_mapping.insert(std::pair<int, unsigned char>(0, driver::BASE_ADDRESS));
         }
 
+        roboclaw = new driver(serial_port);
         roboclaw->set_baud((unsigned int) baudrate);
 
         encoder_pub = nh_private.advertise<roboclaw::RoboclawEncoderSteps>(std::string("enc_steps"), 10);
@@ -75,11 +76,28 @@ namespace roboclaw {
     }
 
     void roscore::velocity_callback(const roboclaw::RoboclawMotorVelocity &msg){
-
+        roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(msg.mot1_vel_sps, msg.mot2_vel_sps));
     }
 
     void roscore::run(){
+        ros::Rate r(10);
+        while(ros::ok()){
 
+            // Publish encoders
+            for(int r=0; r<roboclaw_mapping.size(); r++) {
+
+                std::pair<int, int> encs = roboclaw->get_encoders(roboclaw_mapping[r]);
+
+                RoboclawEncoderSteps enc_steps;
+                enc_steps.index = r;
+                enc_steps.mot1_enc_steps = encs.first;
+                enc_steps.mot2_enc_steps = encs.second;
+                encoder_pub.publish(enc_steps);
+
+            }
+
+            r.sleep();
+        }
     }
 
 }

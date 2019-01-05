@@ -28,6 +28,7 @@
 #include <map>
 #include <exception>
 
+#include <boost/thread/mutex.hpp>
 #include <boost/asio.hpp>
 
 namespace roboclaw {
@@ -35,7 +36,7 @@ namespace roboclaw {
     class driver {
 
     public:
-        driver(std::string &port);
+        driver(std::string port);
 
         ~driver();
 
@@ -45,7 +46,8 @@ namespace roboclaw {
         std::pair<int, int> get_encoders(unsigned char address);
         std::pair<int, int> get_velocity(unsigned char address);
 
-        void set_speed(unsigned char address, std::pair<int, int> speed);
+        void set_velocity(unsigned char address, std::pair<int, int> speed);
+        void set_duty(unsigned char address, std::pair<int, int> duty);
 
         void reset_encoders(unsigned char address);
 
@@ -56,9 +58,14 @@ namespace roboclaw {
         std::shared_ptr<boost::asio::serial_port> serial;
         boost::asio::io_service io;
 
+        boost::mutex serial_mutex;
+
         void init_serial(std::string &port, unsigned int baudrate = DEFAULT_BAUDRATE);
 
-        static unsigned int crc16(unsigned char *packet, size_t nBytes);
+        uint16_t crc;
+
+        uint16_t crc16(uint8_t *packet, size_t nBytes);
+        void crc16_reset();
 
         size_t txrx(unsigned char address, unsigned char command, unsigned char *tx_data, size_t tx_length,
                            unsigned char *rx_data, size_t rx_length, bool tx_crc = false, bool rx_crc = false);

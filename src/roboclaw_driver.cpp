@@ -23,7 +23,7 @@
 
 #include "roboclaw_driver.h"
 
-#include <vector>
+#include <boost/thread/mutex.hpp>
 #include <boost/bind.hpp>
 #include <boost/array.hpp>
 
@@ -32,7 +32,7 @@ namespace roboclaw {
     unsigned char driver::BASE_ADDRESS = 128;
     unsigned int driver::DEFAULT_BAUDRATE = 115200;
 
-    driver::driver(std::string &port) {
+    driver::driver(std::string port) {
         init_serial(port);
     }
 
@@ -49,17 +49,23 @@ namespace roboclaw {
         this->serial->set_option(boost::asio::serial_port_base::baud_rate(baudrate));
     }
 
-    unsigned int driver::crc16(unsigned char *packet, size_t nBytes) {
-        unsigned int crc = 0;
+    void driver::crc16_reset(){
+        crc = 0;
+    }
+
+    uint16_t driver::crc16(uint8_t *packet, size_t nBytes) {
 
         for (size_t byte = 0; byte < nBytes; byte++) {
-            crc = crc ^ ((unsigned int) packet[byte] << 8);
-            for (unsigned char bit = 0; bit < 8; bit++) {
+
+            crc = crc ^ ((uint16_t) packet[byte] << 8);
+
+            for (uint8_t bit = 0; bit < 8; bit++) {
                 if (crc & 0x8000)
                     crc = (crc << 1) ^ 0x1021;
+                else
+                    crc = crc << 1;
             }
         }
-        crc = crc << 1;
 
         return crc;
     }
@@ -72,16 +78,21 @@ namespace roboclaw {
                             size_t rx_length,
                             bool tx_crc, bool rx_crc) {
 
+        boost::mutex::scoped_lock lock(serial_mutex);
+
         std::vector<unsigned char> packet;
 
         if (tx_crc)
-            packet.reserve(tx_length + 4);
+            packet.resize(tx_length + 4);
         else
-            packet.reserve(tx_length + 2);
+            packet.resize(tx_length + 2);
 
         // Header
         packet[0] = address;
         packet[1] = command;
+
+        crc16_reset();
+        crc16(&packet[0], 2);
 
         // Data
         if(tx_length > 0 && tx_data != nullptr)
@@ -89,7 +100,7 @@ namespace roboclaw {
 
         // CRC
         if (tx_crc) {
-            unsigned int crc = crc16(&packet[0], tx_length + 2);
+            unsigned int crc = crc16(&packet[2], tx_length);
 
             // RoboClaw expects big endian / MSB first
             packet[tx_length + 2] = (unsigned char) ((crc >> 8) & 0xFF);
@@ -101,9 +112,9 @@ namespace roboclaw {
 
         std::vector<unsigned char> response;
         if (rx_crc)
-            response.reserve(rx_length + 2);
+            response.resize(rx_length + 2);
         else
-            response.reserve(rx_length);
+            response.resize(rx_length);
 
         bool timeout = false;
         bool error = false;
@@ -112,13 +123,8 @@ namespace roboclaw {
 
         boost::system::error_code error_code;
 
-        boost::asio::deadline_timer timer(io);
-        timer.expires_from_now(boost::posix_time::milliseconds(100));
-
-        timer.async_wait([timeout](const boost::system::error_code &ec) mutable { timeout = true; });
-
         serial->async_read_some(boost::asio::buffer(response),
-                                [error, error_code, bytes_received](const boost::system::error_code &ec,
+                                [&error, &error_code, &bytes_received](const boost::system::error_code &ec,
                                                                     std::size_t bytes_transferred) mutable {
 
                                     if (bytes_transferred == 0)
@@ -126,23 +132,20 @@ namespace roboclaw {
 
                                     error_code = ec;
                                     bytes_received = bytes_transferred;
+
                                 });
 
         io.reset();
-        io.run_one();
+        io.run();
 
-
-        if (error)
-            throw timeout_exception("Roboclaw read timed out");
-        else if (timeout)
+        if (error) {
+            serial->cancel();
             throw std::runtime_error(error_code.message());
-
-        // Copy response back
-        memcpy(rx_data, &response[0], bytes_received);
+        }
 
         // Check CRC
         if (rx_crc) {
-            unsigned int crc_calculated = crc16(&response[0], bytes_received - 2);
+            unsigned int crc_calculated = crc16(&response[0], bytes_received-2);
             unsigned int crc_received = 0;
 
             // RoboClaw generates big endian / MSB first
@@ -152,6 +155,9 @@ namespace roboclaw {
             if (crc_calculated != crc_received)
                 throw std::runtime_error("Roboclaw CRC mismatch");
 
+            memcpy(rx_data, &response[0], bytes_received - 2);
+        }else{
+            memcpy(rx_data, &response[0], bytes_received);
         }
 
         if (!rx_crc)
@@ -175,7 +181,7 @@ namespace roboclaw {
 
     std::pair<int, int> driver::get_encoders(unsigned char address){
 
-        unsigned char rx_buffer[7];
+        unsigned char rx_buffer[5];
 
         txrx(address, 16, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
@@ -228,21 +234,36 @@ namespace roboclaw {
         txrx(address, 20, nullptr, 0, rx_buffer, sizeof(rx_buffer), true, false);
     }
 
-    void driver::set_speed(unsigned char address, std::pair<int, int> speed) {
-        unsigned char rx_buffer[1];
+    void driver::set_velocity(unsigned char address, std::pair<int, int> speed) {
+        unsigned char rx_buffer[2];
         unsigned char tx_buffer[8];
 
+        // RoboClaw expects big endian / MSB first
         tx_buffer[0] = (unsigned char)((speed.first >> 24) & 0xFF);
         tx_buffer[1] = (unsigned char)((speed.first >> 16) & 0xFF);
         tx_buffer[2] = (unsigned char)((speed.first >> 8) & 0xFF);
-        tx_buffer[3] = (unsigned char)((speed.first) & 0xFF);
+        tx_buffer[3] = (unsigned char)(speed.first & 0xFF);
 
         tx_buffer[4] = (unsigned char)((speed.second >> 24) & 0xFF);
         tx_buffer[5] = (unsigned char)((speed.second >> 16) & 0xFF);
         tx_buffer[6] = (unsigned char)((speed.second >> 8) & 0xFF);
-        tx_buffer[7] = (unsigned char)((speed.second) & 0xFF);
+        tx_buffer[7] = (unsigned char)(speed.second & 0xFF);
 
         txrx(address, 37, tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer), true, false);
+    }
+
+    void driver::set_duty(unsigned char address, std::pair<int, int> duty) {
+        unsigned char rx_buffer[2];
+        unsigned char tx_buffer[4];
+
+        // RoboClaw expects big endian / MSB first
+        tx_buffer[0] = (unsigned char)((duty.first >> 8) & 0xFF);
+        tx_buffer[1] = (unsigned char)(duty.first & 0xFF);
+
+        tx_buffer[2] = (unsigned char)((duty.second >> 8) & 0xFF);
+        tx_buffer[3] = (unsigned char)(duty.second & 0xFF);
+
+        txrx(address, 34, tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer), true, false);
     }
 
 }
