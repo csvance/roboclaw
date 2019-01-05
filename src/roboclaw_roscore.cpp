@@ -29,7 +29,7 @@
 
 namespace roboclaw {
 
-    roscore::roscore(ros::NodeHandle nh, ros::NodeHandle nh_private) {
+    roboclaw_roscore::roboclaw_roscore(ros::NodeHandle nh, ros::NodeHandle nh_private) {
 
         std::string serial_port;
         int baudrate;
@@ -70,16 +70,19 @@ namespace roboclaw {
         roboclaw = new driver(serial_port);
         roboclaw->set_baud((unsigned int) baudrate);
 
-        encoder_pub = nh_private.advertise<roboclaw::RoboclawEncoderSteps>(std::string("enc_steps"), 10);
-        velocity_sub = nh.subscribe(std::string("vel_cmd"), 10, &roscore::velocity_callback, this);
+        for(int r=0; r< roboclaw_mapping.size(); r++)
+            roboclaw->reset_encoders(roboclaw_mapping[r]);
+
+        encoder_pub = nh_private.advertise<roboclaw::RoboclawEncoderSteps>(std::string("motor_enc"), 10);
+        velocity_sub = nh.subscribe(std::string("motor_vel_cmd"), 10, &roboclaw_roscore::velocity_callback, this);
 
     }
 
-    void roscore::velocity_callback(const roboclaw::RoboclawMotorVelocity &msg){
+    void roboclaw_roscore::velocity_callback(const roboclaw::RoboclawMotorVelocity &msg){
         roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(msg.mot1_vel_sps, msg.mot2_vel_sps));
     }
 
-    void roscore::run(){
+    void roboclaw_roscore::run(){
         ros::Rate update_rate(10);
         while(ros::ok()){
 

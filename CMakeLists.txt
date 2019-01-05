@@ -133,6 +133,18 @@ add_library(roboclaw_roscore STATIC
         src/roboclaw_roscore.cpp
         )
 
+add_executable(roboclaw_node
+        src/roboclaw_node.cpp
+        )
+
+add_library(diffdrive_roscore STATIC
+        src/diffdrive_roscore.cpp
+        )
+
+add_library(diffdrive_node STATIC
+        src/diffdrive_node.cpp
+        )
+
 add_executable(test_driver
         src/test_driver.cpp
         )
@@ -167,10 +179,22 @@ target_link_libraries(roboclaw_roscore
         roboclaw_driver
         )
 
+target_link_libraries(roboclaw_node
+        ${catkin_LIBRARIES}
+        roboclaw_roscore
+        )
+
+target_link_libraries(diffdrive_roscore
+        ${catkin_LIBRARIES}
+        )
+
 target_link_libraries(test_driver
         ${catkin_LIBRARIES}
         roboclaw_driver
         )
+
+
+
 #############
 ## Install ##
 #############
