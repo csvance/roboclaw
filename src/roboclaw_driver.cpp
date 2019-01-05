@@ -32,21 +32,9 @@ namespace roboclaw {
     unsigned char driver::BASE_ADDRESS = 128;
     unsigned int driver::DEFAULT_BAUDRATE = 115200;
 
-    driver::driver(std::string port) {
-        init_serial(port);
-    }
-
-    driver::~driver() {
-        this->serial->close();
-    }
-
-    void driver::init_serial(std::string &port, unsigned int baudrate) {
-        serial = std::shared_ptr<boost::asio::serial_port>(new boost::asio::serial_port(io, port));
-        set_baud(baudrate);
-    }
-
-    void driver::set_baud(unsigned int baudrate) {
-        this->serial->set_option(boost::asio::serial_port_base::baud_rate(baudrate));
+    driver::driver(std::string port, unsigned int baudrate) {
+        serial = std::shared_ptr<TimeoutSerial>(new TimeoutSerial(port, baudrate));
+        serial->setTimeout(boost::posix_time::milliseconds(200));
     }
 
     void driver::crc16_reset() {
@@ -108,40 +96,24 @@ namespace roboclaw {
 
         }
 
-        serial->write_some(boost::asio::buffer(packet));
+        serial->write((char*)&packet[0], packet.size());
 
-        std::vector<unsigned char> response;
+        size_t want_bytes;
         if (rx_crc)
-            response.resize(rx_length + 2);
+            want_bytes = rx_length + 2;
         else
-            response.resize(rx_length);
+            want_bytes = rx_length;
 
-        bool timeout = false;
-        bool error = false;
+        std::vector<char> response_vector;
 
-        size_t bytes_received = 0;
+        response_vector = serial->read(want_bytes);
 
-        boost::system::error_code error_code;
+        size_t bytes_received = response_vector.size();
 
-        serial->async_read_some(boost::asio::buffer(response),
-                                [&error, &error_code, &bytes_received](const boost::system::error_code &ec,
-                                                                       std::size_t bytes_transferred) mutable {
+        unsigned char* response = (unsigned char*) &response_vector[0];
 
-                                    if (bytes_transferred == 0)
-                                        error = true;
-
-                                    error_code = ec;
-                                    bytes_received = bytes_transferred;
-
-                                });
-
-        io.reset();
-        io.run();
-
-        if (error) {
-            serial->cancel();
-            throw std::runtime_error(error_code.message());
-        }
+        if (bytes_received != want_bytes)
+            throw timeout_exception("Timeout reading from RoboClaw");
 
         // Check CRC
         if (rx_crc) {
@@ -152,8 +124,9 @@ namespace roboclaw {
             crc_received += response[bytes_received - 2] << 8;
             crc_received += response[bytes_received - 1];
 
-            if (crc_calculated != crc_received)
-                throw std::runtime_error("Roboclaw CRC mismatch");
+            if (crc_calculated != crc_received) {
+                throw roboclaw::crc_exception("Roboclaw CRC mismatch");
+            }
 
             memcpy(rx_data, &response[0], bytes_received - 2);
         } else {
@@ -235,7 +208,7 @@ namespace roboclaw {
     }
 
     void driver::set_velocity(unsigned char address, std::pair<int, int> speed) {
-        unsigned char rx_buffer[2];
+        unsigned char rx_buffer[1];
         unsigned char tx_buffer[8];
 
         // RoboClaw expects big endian / MSB first
@@ -253,7 +226,7 @@ namespace roboclaw {
     }
 
     void driver::set_duty(unsigned char address, std::pair<int, int> duty) {
-        unsigned char rx_buffer[2];
+        unsigned char rx_buffer[1];
         unsigned char tx_buffer[4];
 
         // RoboClaw expects big endian / MSB first

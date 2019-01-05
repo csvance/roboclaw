@@ -56,7 +56,6 @@ namespace roboclaw {
 
         double base_width;
         double steps_per_meter;
-        double wheel_radius;
 
         bool swap_motors;
         bool invert_motor_1;

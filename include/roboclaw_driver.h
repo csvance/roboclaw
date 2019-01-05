@@ -29,18 +29,14 @@
 #include <exception>
 
 #include <boost/thread/mutex.hpp>
-#include <boost/asio.hpp>
+#include "TimeoutSerial.h"
 
 namespace roboclaw {
 
     class driver {
 
     public:
-        driver(std::string port);
-
-        ~driver();
-
-        void set_baud(unsigned int baudrate);
+        driver(std::string port, unsigned int baudrate);
 
         std::string get_version(unsigned char address);
 
@@ -58,12 +54,11 @@ namespace roboclaw {
         static unsigned int DEFAULT_BAUDRATE;
 
     private:
-        std::shared_ptr<boost::asio::serial_port> serial;
+        std::shared_ptr<TimeoutSerial> serial;
+
         boost::asio::io_service io;
 
         boost::mutex serial_mutex;
-
-        void init_serial(std::string &port, unsigned int baudrate = DEFAULT_BAUDRATE);
 
         uint16_t crc;
 
@@ -77,7 +72,7 @@ namespace roboclaw {
 
     };
 
-    class timeout_exception : public std::runtime_error {
+    class crc_exception : public std::runtime_error {
     public:
         using std::runtime_error::runtime_error;
     };

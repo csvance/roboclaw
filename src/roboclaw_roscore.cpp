@@ -26,6 +26,8 @@
 #include <map>
 #include <string>
 
+#include <iostream>
+
 namespace roboclaw {
 
     roboclaw_roscore::roboclaw_roscore(ros::NodeHandle nh, ros::NodeHandle nh_private) {
@@ -37,9 +39,13 @@ namespace roboclaw {
         this->nh = nh;
         this->nh_private = nh_private;
 
-        nh_private.param("serial_port", serial_port);
-        nh_private.param("baudrate", baudrate, (int) driver::DEFAULT_BAUDRATE);
-        nh_private.param("roboclaws", num_roboclaws, 1);
+        if(!nh_private.getParam("serial_port", serial_port))
+            serial_port = std::string("/dev/tty.usbserial-FTZ8B103");
+
+        if(!nh_private.getParam("baudrate", baudrate))
+            baudrate = (int) driver::DEFAULT_BAUDRATE;
+        if(!nh_private.getParam("roboclaws", num_roboclaws))
+            num_roboclaws = 1;
 
         roboclaw_mapping = std::map<int, unsigned char>();
 
@@ -55,8 +61,7 @@ namespace roboclaw {
             roboclaw_mapping.insert(std::pair<int, unsigned char>(0, driver::BASE_ADDRESS));
         }
 
-        roboclaw = new driver(serial_port);
-        roboclaw->set_baud((unsigned int) baudrate);
+        roboclaw = new driver(serial_port, baudrate);
 
         for (int r = 0; r < roboclaw_mapping.size(); r++)
             roboclaw->reset_encoders(roboclaw_mapping[r]);
@@ -67,7 +72,18 @@ namespace roboclaw {
     }
 
     void roboclaw_roscore::velocity_callback(const roboclaw::RoboclawMotorVelocity &msg) {
-        roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(msg.mot1_vel_sps, msg.mot2_vel_sps));
+        last_message = ros::Time::now();
+
+        ROS_INFO("VELOCITY CALLBACK");
+
+        try {
+            roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(msg.mot1_vel_sps, msg.mot2_vel_sps));
+        } catch(roboclaw::crc_exception &e){
+            ROS_INFO("RoboClaw CRC error during set velocity!");
+        } catch(timeout_exception &e){
+            ROS_INFO("RoboClaw timout during set velocity!");
+        }
+
     }
 
     void roboclaw_roscore::run() {
@@ -77,11 +93,21 @@ namespace roboclaw {
         ros::Rate update_rate(10);
         while (ros::ok()) {
 
+            update_rate.sleep();
+
             // Publish encoders
             for (int r = 0; r < roboclaw_mapping.size(); r++) {
-
-                std::pair<int, int> encs = roboclaw->get_encoders(roboclaw_mapping[r]);
-
+                std::pair<int, int> encs = std::pair<int, int>(0, 0);
+                try {
+                    encs = roboclaw->get_encoders(roboclaw_mapping[r]);
+                } catch(roboclaw::crc_exception &e){
+                    ROS_INFO("RoboClaw CRC error during getting encoders!");
+                    continue;
+                } catch(timeout_exception &e){
+                    ROS_INFO("RoboClaw timout during getting encoders!");
+                    continue;
+                }
+                
                 RoboclawEncoderSteps enc_steps;
                 enc_steps.index = r;
                 enc_steps.mot1_enc_steps = encs.first;
@@ -92,11 +118,16 @@ namespace roboclaw {
 
             if (ros::Time::now() - last_message > ros::Duration(5)) {
                 for (int r = 0; r < roboclaw_mapping.size(); r++) {
-                    roboclaw->set_duty(roboclaw_mapping[r], std::pair<int, int>(0, 0));
+                    try {
+                        roboclaw->set_duty(roboclaw_mapping[r], std::pair<int, int>(0, 0));
+                    } catch(roboclaw::crc_exception &e){
+                        ROS_INFO("RoboClaw CRC error setting duty cyrcle!");
+                    } catch(timeout_exception &e) {
+                        ROS_INFO("RoboClaw timout during setting duty cycle!");
+                    }
                 }
             }
-            
-            update_rate.sleep();
+
         }
     }
 

@@ -127,7 +127,7 @@ include_directories(
 ## Declare a C++ library
 add_library(roboclaw_driver STATIC
         src/roboclaw_driver.cpp
-        )
+        src/TimeoutSerial.cpp include/TimeoutSerial.h)
 
 add_library(roboclaw_roscore STATIC
         src/roboclaw_roscore.cpp
@@ -141,7 +141,7 @@ add_library(diffdrive_roscore STATIC
         src/diffdrive_roscore.cpp
         )
 
-add_library(diffdrive_node STATIC
+add_executable(diffdrive_node
         src/diffdrive_node.cpp
         )
 
@@ -186,6 +186,11 @@ target_link_libraries(roboclaw_node
 
 target_link_libraries(diffdrive_roscore
         ${catkin_LIBRARIES}
+        )
+
+target_link_libraries(diffdrive_node
+        ${catkin_LIBRARIES}
+        diffdrive_roscore
         )
 
 target_link_libraries(test_driver

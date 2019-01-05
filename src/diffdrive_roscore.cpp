@@ -45,13 +45,18 @@ namespace roboclaw {
         last_steps_1 = 0;
         last_steps_2 = 0;
 
-        nh_private.param("base_width", base_width);
-        nh_private.param("steps_per_meter", steps_per_meter);
-        nh_private.param("wheel_radius", wheel_radius);
+        if(!nh_private.getParam("base_width", base_width)){
+            throw std::runtime_error("Must specify base_width!");
+        }
+        if(!nh_private.getParam("steps_per_meter", steps_per_meter))
+            throw std::runtime_error("Must specify steps_per_meter!");
 
-        nh_private.param("swap_motors", swap_motors, false);
-        nh_private.param("invert_motor_1", invert_motor_1, false);
-        nh_private.param("invert_motor_2", invert_motor_2, false);
+        if(!nh_private.getParam("swap_motors", swap_motors))
+            swap_motors = false;
+        if(!nh_private.getParam("invert_motor_1", invert_motor_1))
+            invert_motor_1 = false;
+        if(!nh_private.getParam("invert_motor_2", invert_motor_2))
+            invert_motor_2 = false;
 
     }
 
@@ -130,9 +135,9 @@ namespace roboclaw {
         double u_w = ((delta_1 + delta_2) / steps_per_meter) / 2.0;
         double u_p = ((delta_2 - delta_1) / steps_per_meter);
 
-        double delta_x = wheel_radius * u_w * cos(last_theta);
-        double delta_y = wheel_radius * u_w * sin(last_theta);
-        double delta_theta = wheel_radius / base_width * u_p;
+        double delta_x = u_w * cos(last_theta);
+        double delta_y = u_w * sin(last_theta);
+        double delta_theta = u_p / base_width;
 
         last_x += delta_x;
         last_y += delta_y;
