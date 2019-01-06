@@ -37,6 +37,7 @@ namespace roboclaw {
     class roboclaw_roscore {
     public:
         roboclaw_roscore(ros::NodeHandle nh, ros::NodeHandle nh_private);
+        ~roboclaw_roscore();
 
         void run();
 

@@ -29,6 +29,7 @@
 #include "roboclaw/RoboclawMotorVelocity.h"
 #include "geometry_msgs/Quaternion.h"
 #include "tf/transform_datatypes.h"
+#include "tf/transform_broadcaster.h"
 
 namespace roboclaw {
 
@@ -71,37 +72,18 @@ namespace roboclaw {
         motor_vel.mot2_vel_sps = 0;
 
         // Linear
-        if(abs(msg.linear.x) + abs(msg.linear.y) != 0) {
+        motor_vel.mot1_vel_sps += (int) (steps_per_meter * msg.linear.x);
+        motor_vel.mot2_vel_sps += (int) (steps_per_meter * msg.linear.x);
 
-            double turn_coeff;
-            double linear_coeff;
-
-            if (abs(msg.linear.x) >= abs(msg.linear.y)) {
-                linear_coeff = abs(msg.linear.x) / (abs(msg.linear.x) + abs(msg.linear.y));
-                turn_coeff = 1 - linear_coeff;
-            } else {
-                turn_coeff = abs(msg.linear.y) / (abs(msg.linear.x) + abs(msg.linear.y));
-                linear_coeff = 1 - turn_coeff;
-            }
-
-            // Linear
-            motor_vel.mot1_vel_sps += (int) (steps_per_meter * linear_coeff * msg.linear.x);
-            motor_vel.mot2_vel_sps += (int) (steps_per_meter * linear_coeff * msg.linear.x);
-
-            if(msg.linear.y >= 0)
-                motor_vel.mot2_vel_sps += (int) (steps_per_meter * turn_coeff * msg.linear.y);
-            else if(msg.linear.y < 0)
-                motor_vel.mot1_vel_sps += (int) (steps_per_meter * turn_coeff * msg.linear.y);
-
-        // Pure Rotational
-        }else if(abs(msg.angular.z) != 0) {
-
-            double angular_velocity = msg.angular.z * base_width/2;
-
-            motor_vel.mot1_vel_sps += (int) -(steps_per_meter * angular_velocity);
-            motor_vel.mot2_vel_sps += (int) (steps_per_meter * angular_velocity);
-
+        if(msg.linear.y > 0){
+            motor_vel.mot2_vel_sps += (int) (steps_per_meter * msg.linear.y);
+        }else if(msg.linear.y < 0){
+            motor_vel.mot1_vel_sps += (int) (steps_per_meter * msg.linear.y);
         }
+
+        // Angular
+        motor_vel.mot1_vel_sps += (int) -(steps_per_meter * msg.angular.z * base_width/2);
+        motor_vel.mot2_vel_sps += (int) (steps_per_meter * msg.angular.z * base_width/2);
 
         if (invert_motor_1)
             motor_vel.mot1_vel_sps = -motor_vel.mot1_vel_sps;
@@ -119,6 +101,8 @@ namespace roboclaw {
     }
 
     void diffdrive_roscore::encoder_callback(const roboclaw::RoboclawEncoderSteps &msg) {
+
+        static tf::TransformBroadcaster br;
 
         int delta_1 = msg.mot1_enc_steps - last_steps_1;
         int delta_2 = msg.mot2_enc_steps - last_steps_2;
@@ -145,26 +129,43 @@ namespace roboclaw {
         double delta_y = u_w * sin(last_theta);
         double delta_theta = u_p / base_width;
 
-        last_x += delta_x;
-        last_y += delta_y;
-        last_theta += delta_theta;
+        double cur_x = last_x + delta_x;
+        double cur_y = last_y + delta_y;
+        double cur_theta = last_theta + delta_theta;
 
         nav_msgs::Odometry odom;
 
         odom.header.frame_id = "odom";
         odom.child_frame_id = "base_link";
 
+        // Time
         odom.header.stamp = ros::Time::now();
-        odom.pose.pose.position.x = last_x;
-        odom.pose.pose.position.y = last_y;
 
-        tf::Quaternion quaternion = tf::createQuaternionFromRPY(0.0, 0.0, last_theta);
+        // Position
+        odom.pose.pose.position.x = cur_x;
+        odom.pose.pose.position.y = cur_y;
+
+        // Velocity
+        odom.twist.twist.linear.x = cur_x - last_x;
+        odom.twist.twist.linear.y = 0;
+        odom.twist.twist.angular.z = cur_theta - last_theta;
+
+        tf::Quaternion quaternion = tf::createQuaternionFromRPY(0.0, 0.0, cur_theta);
         odom.pose.pose.orientation.w = quaternion.w();
         odom.pose.pose.orientation.x = quaternion.x();
         odom.pose.pose.orientation.y = quaternion.y();
         odom.pose.pose.orientation.z = quaternion.z();
 
+        tf::Transform transform;
+        transform.setOrigin(tf::Vector3(last_x, last_y, 0.0));
+        transform.setRotation(tf::createQuaternionFromRPY(0.0, 0.0, cur_theta));
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", "base_link"));
+
         odom_pub.publish(odom);
+
+        last_x = cur_x;
+        last_y = cur_y;
+        last_theta = cur_theta;
 
     }
 

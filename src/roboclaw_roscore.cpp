@@ -72,6 +72,11 @@ namespace roboclaw {
 
     }
 
+    roboclaw_roscore::~roboclaw_roscore() {
+        for (int r = 0; r < roboclaw_mapping.size(); r++)
+            roboclaw->set_duty(roboclaw_mapping[r], std::pair<int, int>(0, 0));
+    }
+
     void roboclaw_roscore::velocity_callback(const roboclaw::RoboclawMotorVelocity &msg) {
         last_message = ros::Time::now();
 

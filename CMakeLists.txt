@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
         roscpp
         rospy
         std_msgs
+        tf
         )
 
 ## System dependencies are found with CMake's conventions
@@ -106,9 +107,9 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-        #  INCLUDE_DIRS include
-        #  LIBRARIES roboclaw
-        #  CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs
+        INCLUDE_DIRS include
+        # LIBRARIES roboclaw
+        CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs tf
         #  DEPENDS system_lib
 )
 
@@ -119,7 +120,6 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-        ../../devel/
         include
         ${catkin_INCLUDE_DIRS}
 )
@@ -127,7 +127,7 @@ include_directories(
 ## Declare a C++ library
 add_library(roboclaw_driver STATIC
         src/roboclaw_driver.cpp
-        src/TimeoutSerial.cpp include/TimeoutSerial.h)
+        src/TimeoutSerial.cpp)
 
 add_library(roboclaw_roscore STATIC
         src/roboclaw_roscore.cpp
@@ -189,7 +189,6 @@ target_link_libraries(diffdrive_node
         ${catkin_LIBRARIES}
         diffdrive_roscore
         )
-
 
 
 #############

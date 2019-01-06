@@ -6,7 +6,7 @@
     </node>
 
     <node pkg="roboclaw" type="roboclaw_node" name="roboclaw" output="screen">
-        <param name="~serial_port" value="/dev/tty.usbserial-FTZ8B103"/>
+        <param name="~serial_port" value="/dev/ttyS0"/>
         <param name="~baudrate" value="115200"/>
     </node>
 
