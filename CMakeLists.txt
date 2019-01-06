@@ -145,9 +145,6 @@ add_executable(diffdrive_node
         src/diffdrive_node.cpp
         )
 
-add_executable(test_driver
-        src/test_driver.cpp
-        )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -191,11 +188,6 @@ target_link_libraries(diffdrive_roscore
 target_link_libraries(diffdrive_node
         ${catkin_LIBRARIES}
         diffdrive_roscore
-        )
-
-target_link_libraries(test_driver
-        ${catkin_LIBRARIES}
-        roboclaw_driver
         )
 
 

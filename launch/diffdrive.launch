@@ -1,15 +1,13 @@
 <launch>
-          <node pkg="roboclaw" type="diffdrive_node" name="diffdrive" output="screen">
-            <param name="~steps_per_meter" value="10033.127612513083"/>
-            <param name="~base_width" value="0.16"/>
-          </node>
+    <node pkg="roboclaw" type="diffdrive_node" name="diffdrive" output="screen">
+        <param name="~steps_per_meter" value="10033.127612513083"/>
+        <param name="~base_width" value="0.16"/>
+        <param name="~swap_motors" value="true"/>
+    </node>
 
-          <!--
+    <node pkg="roboclaw" type="roboclaw_node" name="roboclaw" output="screen">
+        <param name="~serial_port" value="/dev/tty.usbserial-FTZ8B103"/>
+        <param name="~baudrate" value="115200"/>
+    </node>
 
-          <node pkg="roboclaw" type="roboclaw_node" name="roboclaw" output="screen">
-            <param name="~serial_port" value="/dev/tty.usbserial-FTZ8B103"/>
-            <param name="~baudrate" value="115200"/>
-          </node>
-
-          -->
 </launch>

@@ -22,6 +22,8 @@
 */
 
 #include <cmath>
+#include <iostream>
+#include <string>
 
 #include "diffdrive_roscore.h"
 #include "roboclaw/RoboclawMotorVelocity.h"
@@ -35,11 +37,11 @@ namespace roboclaw {
         this->nh = nh;
         this->nh_private = nh_private;
 
-        odom_pub = nh_private.advertise<nav_msgs::Odometry>(std::string("odom"), 10);
-        motor_pub = nh_private.advertise<roboclaw::RoboclawMotorVelocity>(std::string("motor_vel_cmd"), 10);
+        odom_pub = nh.advertise<nav_msgs::Odometry>(std::string("odom"), 10);
+        motor_pub = nh.advertise<roboclaw::RoboclawMotorVelocity>(std::string("motor_cmd_vel"), 10);
 
         encoder_sub = nh.subscribe(std::string("motor_enc"), 10, &diffdrive_roscore::encoder_callback, this);
-        twist_sub = nh.subscribe(std::string("vel_cmd"), 10, &diffdrive_roscore::twist_callback, this);
+        twist_sub = nh.subscribe(std::string("cmd_vel"), 10, &diffdrive_roscore::twist_callback, this);
 
         last_theta = 0.0;
         last_steps_1 = 0;
@@ -48,11 +50,12 @@ namespace roboclaw {
         if(!nh_private.getParam("base_width", base_width)){
             throw std::runtime_error("Must specify base_width!");
         }
-        if(!nh_private.getParam("steps_per_meter", steps_per_meter))
+        if(!nh_private.getParam("steps_per_meter", steps_per_meter)) {
             throw std::runtime_error("Must specify steps_per_meter!");
+        }
 
         if(!nh_private.getParam("swap_motors", swap_motors))
-            swap_motors = false;
+            swap_motors = true;
         if(!nh_private.getParam("invert_motor_1", invert_motor_1))
             invert_motor_1 = false;
         if(!nh_private.getParam("invert_motor_2", invert_motor_2))
@@ -95,8 +98,8 @@ namespace roboclaw {
 
             double angular_velocity = msg.angular.z * base_width/2;
 
-            motor_vel.mot1_vel_sps += (int) (steps_per_meter * angular_velocity);
-            motor_vel.mot2_vel_sps += (int) -(steps_per_meter * angular_velocity);
+            motor_vel.mot1_vel_sps += (int) -(steps_per_meter * angular_velocity);
+            motor_vel.mot2_vel_sps += (int) (steps_per_meter * angular_velocity);
 
         }
 
@@ -119,6 +122,9 @@ namespace roboclaw {
 
         int delta_1 = msg.mot1_enc_steps - last_steps_1;
         int delta_2 = msg.mot2_enc_steps - last_steps_2;
+
+        last_steps_1 = msg.mot1_enc_steps;
+        last_steps_2 = msg.mot2_enc_steps;
 
         if (invert_motor_1)
             delta_1 = -delta_1;
@@ -144,6 +150,9 @@ namespace roboclaw {
         last_theta += delta_theta;
 
         nav_msgs::Odometry odom;
+
+        odom.header.frame_id = "odom";
+        odom.child_frame_id = "base_link";
 
         odom.header.stamp = ros::Time::now();
         odom.pose.pose.position.x = last_x;

@@ -39,8 +39,9 @@ namespace roboclaw {
         this->nh = nh;
         this->nh_private = nh_private;
 
-        if(!nh_private.getParam("serial_port", serial_port))
-            serial_port = std::string("/dev/tty.usbserial-FTZ8B103");
+        if(!nh_private.getParam("serial_port", serial_port)) {
+            throw std::runtime_error("Must specify serial port");
+        }
 
         if(!nh_private.getParam("baudrate", baudrate))
             baudrate = (int) driver::DEFAULT_BAUDRATE;
@@ -66,15 +67,13 @@ namespace roboclaw {
         for (int r = 0; r < roboclaw_mapping.size(); r++)
             roboclaw->reset_encoders(roboclaw_mapping[r]);
 
-        encoder_pub = nh_private.advertise<roboclaw::RoboclawEncoderSteps>(std::string("motor_enc"), 10);
-        velocity_sub = nh.subscribe(std::string("motor_vel_cmd"), 10, &roboclaw_roscore::velocity_callback, this);
+        encoder_pub = nh.advertise<roboclaw::RoboclawEncoderSteps>(std::string("motor_enc"), 10);
+        velocity_sub = nh.subscribe(std::string("motor_cmd_vel"), 10, &roboclaw_roscore::velocity_callback, this);
 
     }
 
     void roboclaw_roscore::velocity_callback(const roboclaw::RoboclawMotorVelocity &msg) {
         last_message = ros::Time::now();
-
-        ROS_INFO("VELOCITY CALLBACK");
 
         try {
             roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(msg.mot1_vel_sps, msg.mot2_vel_sps));
@@ -91,8 +90,10 @@ namespace roboclaw {
         last_message = ros::Time::now();
 
         ros::Rate update_rate(10);
+
         while (ros::ok()) {
 
+            ros::spinOnce();
             update_rate.sleep();
 
             // Publish encoders
@@ -107,7 +108,7 @@ namespace roboclaw {
                     ROS_INFO("RoboClaw timout during getting encoders!");
                     continue;
                 }
-                
+
                 RoboclawEncoderSteps enc_steps;
                 enc_steps.index = r;
                 enc_steps.mot1_enc_steps = encs.first;
