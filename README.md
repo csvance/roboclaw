@@ -20,7 +20,8 @@ Roboclaw is an extensible series of [Roboclaw][roboclaw] nodes for [ROS][ros]
 | Param | Type  | Description  |
 | :------------- |:-------------| :-----|
 | serial_port | string | Path to the serial port to use |
-| baudrate | int | baudrate of the serial port |
+| baudrate | int | Baudrate of the serial port |
+| roboclaws | int | Number of Roboclaw controllers in packet serial mode |
 
 #### Topics
 | Action | Topic | Type |
@@ -28,14 +29,19 @@ Roboclaw is an extensible series of [Roboclaw][roboclaw] nodes for [ROS][ros]
 | publish | motor_enc_steps | roboclaw/RoboclawEncoderSteps |
 | subscribe | motor_cmd_vel | roboclaw/RoboclawMotorVelocity |
 
+#### Notes
+
+- When using one Roboclaw controller, configure it in packet serial mode with address 0x80. This will be motor index 0 in RoboclawEncoderSteps and RoboclawMotorVelocity.
+- When using more than one Roboclaw controller, configure them in packet serial mode with 0x80 being motor index 0, 0x81 being motor index 1, and so on.
+
 ### diffdrive_node
 
 #### Parameters
 
 | Param | Type  | Description  |
 | :------------- |:-------------| :-----|
-| steps_per_meter | string | Path to the serial port to use |
-| base_width | int | baudrate of the serial port |
+| steps_per_meter | string | Number of encoder steps per meter |
+| base_width | int | Diameter of the robots base from the center of each wheel |
 | swap_motors | bool | Swap motor1 with motor2
 | invert_motor_1 | bool | Invert drive and odometry for motor1
 | invert_motor_2 | bool | Invert drive and odometry for motor2
