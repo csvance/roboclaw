@@ -25,8 +25,8 @@ Roboclaw is an extensible series of [Roboclaw][roboclaw] nodes for [ROS][ros]
 #### Topics
 | Action | Topic | Type |
 | :------------- |:-------------| :-----|
-| publish | odom | Odometry |
-| subscribe | cmd_vel | Twist |
+| publish | motor_enc_steps | roboclaw/RoboclawEncoderSteps |
+| subscribe | motor_cmd_vel | roboclaw/RoboclawMotorVelocity |
 
 ### diffdrive_node
 
@@ -43,8 +43,8 @@ Roboclaw is an extensible series of [Roboclaw][roboclaw] nodes for [ROS][ros]
 #### Topics
 | Action | Topic | Type |
 | :------------- |:-------------| :-----|
-| publish | motor_enc_steps | roboclaw/RoboclawEncoderSteps |
-| subscribe | motor_cmd_vel | roboclaw/RoboclawMotorVelocity |
+| publish | odom | Odometry |
+| subscribe | cmd_vel | Twist |
 
 ## Planned
 
