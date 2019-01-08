@@ -9,8 +9,42 @@ Roboclaw is an extensible series of [Roboclaw][roboclaw] nodes for [ROS][ros]
 - Written in roscpp for effecient memory usage and performance
 
 ## Requirements
-- ROS Kinetic or Melodic
-- C++11 or higher 
+- ROS Kinetic/Lunar/Melodic
+
+## Nodes
+
+### roboclaw_node
+
+#### Parameters
+
+| Param | Type  | Description  |
+| :------------- |:-------------| :-----|
+| serial_port | string | Path to the serial port to use |
+| baudrate | int | baudrate of the serial port |
+
+#### Topics
+| Action | Topic | Type |
+| :------------- |:-------------| :-----|
+| publish | odom | Odometry |
+| subscribe | cmd_vel | Twist |
+
+### diffdrive_node
+
+#### Parameters
+
+| Param | Type  | Description  |
+| :------------- |:-------------| :-----|
+| steps_per_meter | string | Path to the serial port to use |
+| base_width | int | baudrate of the serial port |
+| swap_motors | bool | Swap motor1 with motor2
+| invert_motor_1 | bool | Invert drive and odometry for motor1
+| invert_motor_2 | bool | Invert drive and odometry for motor2
+
+#### Topics
+| Action | Topic | Type |
+| :------------- |:-------------| :-----|
+| publish | motor_enc_steps | roboclaw/RoboclawEncoderSteps |
+| subscribe | motor_cmd_vel | roboclaw/RoboclawMotorVelocity |
 
 ## Planned
 

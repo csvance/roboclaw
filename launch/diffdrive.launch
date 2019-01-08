@@ -1,8 +1,11 @@
 <launch>
+
     <node pkg="roboclaw" type="diffdrive_node" name="diffdrive" output="screen">
         <param name="~steps_per_meter" value="10033.127612513083"/>
         <param name="~base_width" value="0.16"/>
-        <param name="~swap_motors" value="true"/>
+        <param name="~swap_motors" value="false"/>
+        <param name="~invert_motor_1" value="false"/>
+        <param name="~invert_motor_2" value="false"/>
     </node>
 
     <node pkg="roboclaw" type="roboclaw_node" name="roboclaw" output="screen">
