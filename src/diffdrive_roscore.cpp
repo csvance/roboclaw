@@ -62,14 +62,14 @@ namespace roboclaw {
         if(!nh_private.getParam("invert_motor_2", invert_motor_2))
             invert_motor_2 = false;
 
-        if(!nh_private.getParam("cov_pos_x", cov_pos_x)){
-            cov_pos_x = 0.01;
+        if(!nh_private.getParam("var_pos_x", var_pos_x)){
+            var_pos_x = 0.01;
         }
-        if(!nh_private.getParam("cov_pos_y", cov_pos_y)){
-            cov_pos_y = 0.01;
+        if(!nh_private.getParam("var_pos_y", var_pos_y)){
+            var_pos_y = 0.01;
         }
-        if(!nh_private.getParam("cov_theta_z", cov_theta_z)){
-            cov_theta_z = 0.01;
+        if(!nh_private.getParam("var_theta_z", var_theta_z)){
+            var_theta_z = 0.01;
         }
 
     }
@@ -167,13 +167,13 @@ namespace roboclaw {
         odom.pose.pose.orientation.z = quaternion.z();
 
         // Pos_x Variance
-        odom.pose.covariance[0] = cov_pos_x;
+        odom.pose.covariance[0] = var_pos_x;
 
         // Pos_y Variance
-        odom.pose.covariance[7] = cov_pos_y;
+        odom.pose.covariance[7] = var_pos_y;
 
         // Theta_z Variance
-        odom.pose.covariance[35] = cov_theta_z;
+        odom.pose.covariance[35] = var_theta_z;
 
         tf::Transform transform;
         transform.setOrigin(tf::Vector3(last_x, last_y, 0.0));

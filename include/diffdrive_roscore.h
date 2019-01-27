@@ -61,9 +61,9 @@ namespace roboclaw {
         bool invert_motor_1;
         bool invert_motor_2;
 
-        double cov_pos_x;
-        double cov_pos_y;
-        double cov_theta_z;
+        double var_pos_x;
+        double var_pos_y;
+        double var_theta_z;
 
         void twist_callback(const geometry_msgs::Twist &msg);
 
