@@ -9,6 +9,11 @@
         <param name="~swap_motors" value="false"/>
         <param name="~invert_motor_1" value="false"/>
         <param name="~invert_motor_2" value="false"/>
+
+        <param name="~var_pos_x" value="0.01"/>
+        <param name="~var_pos_y" value="0.01"/>
+        <param name="~var_theta_z" value="0.01"/>
+
     </node>
 
 </launch>

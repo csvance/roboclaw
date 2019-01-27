@@ -62,6 +62,16 @@ namespace roboclaw {
         if(!nh_private.getParam("invert_motor_2", invert_motor_2))
             invert_motor_2 = false;
 
+        if(!nh_private.getParam("cov_pos_x", cov_pos_x)){
+            cov_pos_x = 0.01;
+        }
+        if(!nh_private.getParam("cov_pos_y", cov_pos_y)){
+            cov_pos_y = 0.01;
+        }
+        if(!nh_private.getParam("cov_theta_z", cov_theta_z)){
+            cov_theta_z = 0.01;
+        }
+
     }
 
     void diffdrive_roscore::twist_callback(const geometry_msgs::Twist &msg) {
@@ -147,7 +157,7 @@ namespace roboclaw {
 
         // Velocity
         odom.twist.twist.linear.x = cur_x - last_x;
-        odom.twist.twist.linear.y = 0;
+        odom.twist.twist.linear.y = cur_y - last_y;
         odom.twist.twist.angular.z = cur_theta - last_theta;
 
         tf::Quaternion quaternion = tf::createQuaternionFromRPY(0.0, 0.0, cur_theta);
@@ -155,6 +165,15 @@ namespace roboclaw {
         odom.pose.pose.orientation.x = quaternion.x();
         odom.pose.pose.orientation.y = quaternion.y();
         odom.pose.pose.orientation.z = quaternion.z();
+
+        // Pos_x Variance
+        odom.pose.covariance[0] = cov_pos_x;
+
+        // Pos_y Variance
+        odom.pose.covariance[7] = cov_pos_y;
+
+        // Theta_z Variance
+        odom.pose.covariance[35] = cov_theta_z;
 
         tf::Transform transform;
         transform.setOrigin(tf::Vector3(last_x, last_y, 0.0));

@@ -39,9 +39,8 @@ namespace roboclaw {
         this->nh = nh;
         this->nh_private = nh_private;
 
-        if(!nh_private.getParam("serial_port", serial_port)) {
+        if(!nh_private.getParam("serial_port", serial_port))
             throw std::runtime_error("Must specify serial port");
-        }
 
         if(!nh_private.getParam("baudrate", baudrate))
             baudrate = (int) driver::DEFAULT_BAUDRATE;
@@ -83,9 +82,9 @@ namespace roboclaw {
         try {
             roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(msg.mot1_vel_sps, msg.mot2_vel_sps));
         } catch(roboclaw::crc_exception &e){
-            ROS_INFO("RoboClaw CRC error during set velocity!");
+            ROS_ERROR("RoboClaw CRC error during set velocity!");
         } catch(timeout_exception &e){
-            ROS_INFO("RoboClaw timout during set velocity!");
+            ROS_ERROR("RoboClaw timout during set velocity!");
         }
 
     }
@@ -107,10 +106,10 @@ namespace roboclaw {
                 try {
                     encs = roboclaw->get_encoders(roboclaw_mapping[r]);
                 } catch(roboclaw::crc_exception &e){
-                    ROS_INFO("RoboClaw CRC error during getting encoders!");
+                    ROS_ERROR("RoboClaw CRC error during getting encoders!");
                     continue;
                 } catch(timeout_exception &e){
-                    ROS_INFO("RoboClaw timout during getting encoders!");
+                    ROS_ERROR("RoboClaw timout during getting encoders!");
                     continue;
                 }
 
@@ -127,9 +126,9 @@ namespace roboclaw {
                     try {
                         roboclaw->set_duty(roboclaw_mapping[r], std::pair<int, int>(0, 0));
                     } catch(roboclaw::crc_exception &e){
-                        ROS_INFO("RoboClaw CRC error setting duty cyrcle!");
+                        ROS_ERROR("RoboClaw CRC error setting duty cyrcle!");
                     } catch(timeout_exception &e) {
-                        ROS_INFO("RoboClaw timout during setting duty cycle!");
+                        ROS_ERROR("RoboClaw timout during setting duty cycle!");
                     }
                 }
             }
