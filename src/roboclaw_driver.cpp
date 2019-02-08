@@ -179,7 +179,7 @@ namespace roboclaw {
 
     std::pair<int, int> driver::get_velocity(unsigned char address) {
 
-        unsigned char rx_buffer[7];
+        unsigned char rx_buffer[5];
 
         txrx(address, 18, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
@@ -208,7 +208,7 @@ namespace roboclaw {
     }
 
     void driver::set_velocity(unsigned char address, std::pair<int, int> speed) {
-        unsigned char rx_buffer[2];
+        unsigned char rx_buffer[1];
         unsigned char tx_buffer[8];
 
         // RoboClaw expects big endian / MSB first
