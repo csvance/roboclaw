@@ -179,7 +179,7 @@ namespace roboclaw {
 
     std::pair<int, int> driver::get_velocity(unsigned char address) {
 
-        unsigned char rx_buffer[7];
+        unsigned char rx_buffer[5];
 
         txrx(address, 18, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
