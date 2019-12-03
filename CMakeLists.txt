@@ -51,8 +51,8 @@ find_package(Boost REQUIRED COMPONENTS system)
 ## Generate messages in the 'msg' folder
 add_message_files(
         FILES
-        RoboclawMotorVelocity.msg
         RoboclawEncoderSteps.msg
+        RoboclawMotorVelocity.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -119,6 +119,8 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
+
+
 include_directories(
         include
         ${catkin_INCLUDE_DIRS}
@@ -190,7 +192,7 @@ target_link_libraries(diffdrive_node
         diffdrive_roscore
         )
 
-
+add_dependencies(diffdrive_roscore roboclaw_generate_messages_cpp)
 #############
 ## Install ##
 #############
