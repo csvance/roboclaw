@@ -26,6 +26,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/bind.hpp>
 #include <boost/array.hpp>
+#include "ros/ros.h"
 
 namespace roboclaw {
 
@@ -177,6 +178,21 @@ namespace roboclaw {
         return std::pair<int, int>((int) (int32_t) e1, (int) (int32_t) e2);
     }
 
+    int driver::get_voltage(unsigned char address) {
+
+        unsigned char rx_buffer[2];
+
+        txrx(address, 24, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+
+        int battery_voltage = 0;
+
+        battery_voltage += rx_buffer[0] << 8;
+        battery_voltage += rx_buffer[1];
+
+        return battery_voltage;
+
+    }
+
     std::pair<int, int> driver::get_velocity(unsigned char address) {
 
         unsigned char rx_buffer[5];
@@ -223,6 +239,8 @@ namespace roboclaw {
         tx_buffer[7] = (unsigned char) (speed.second & 0xFF);
 
         txrx(address, 37, tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer), true, false);
+
+
     }
 
     void driver::set_duty(unsigned char address, std::pair<int, int> duty) {

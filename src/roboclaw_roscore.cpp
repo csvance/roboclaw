@@ -67,6 +67,7 @@ namespace roboclaw {
             roboclaw->reset_encoders(roboclaw_mapping[r]);
 
         encoder_pub = nh.advertise<roboclaw::RoboclawEncoderSteps>(std::string("motor_enc"), 10);
+        battery_pub = nh.advertise<roboclaw::RoboclawBatteryMessage>(std::string("battery_voltage"), 10);
         velocity_sub = nh.subscribe(std::string("motor_cmd_vel"), 10, &roboclaw_roscore::velocity_callback, this);
 
     }
@@ -100,6 +101,28 @@ namespace roboclaw {
             ros::spinOnce();
             update_rate.sleep();
 
+            // Publish battery
+            for (int r = 0; r < roboclaw_mapping.size(); r++) {
+                int batt = 0;
+                try {
+                    batt = roboclaw->get_voltage(roboclaw_mapping[r]);
+
+                } catch(roboclaw::crc_exception &e){
+                    ROS_ERROR("RoboClaw CRC error during getting battery voltage!");
+                    continue;
+                } catch(timeout_exception &e){
+                    ROS_ERROR("RoboClaw timout during getting battery voltage!");
+                    continue;
+                }
+
+                RoboclawBatteryMessage battery_v;
+                battery_v.index = r;
+                battery_v.battery_voltage = (float) batt/10;
+
+                battery_pub.publish(battery_v);
+
+            }
+
             // Publish encoders
             for (int r = 0; r < roboclaw_mapping.size(); r++) {
                 std::pair<int, int> encs = std::pair<int, int>(0, 0);
@@ -121,12 +144,15 @@ namespace roboclaw {
 
             }
 
+
+
+
             if (ros::Time::now() - last_message > ros::Duration(5)) {
                 for (int r = 0; r < roboclaw_mapping.size(); r++) {
                     try {
                         roboclaw->set_duty(roboclaw_mapping[r], std::pair<int, int>(0, 0));
                     } catch(roboclaw::crc_exception &e){
-                        ROS_ERROR("RoboClaw CRC error setting duty cyrcle!");
+                        ROS_ERROR("RoboClaw CRC error setting duty cycle!");
                     } catch(timeout_exception &e) {
                         ROS_ERROR("RoboClaw timout during setting duty cycle!");
                     }

@@ -42,6 +42,8 @@ namespace roboclaw {
 
         std::pair<int, int> get_encoders(unsigned char address);
 
+        int get_voltage(unsigned char address);
+
         std::pair<int, int> get_velocity(unsigned char address);
 
         void set_velocity(unsigned char address, std::pair<int, int> speed);
