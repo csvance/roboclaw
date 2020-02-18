@@ -31,7 +31,7 @@
 
 #include "roboclaw/RoboclawEncoderSteps.h"
 #include "roboclaw/RoboclawMotorVelocity.h"
-#include "roboclaw/RoboclawBatteryMessage.h"
+#include "roboclaw/RoboclawInputVoltageMessage.h"
 
 namespace roboclaw {
 
@@ -51,7 +51,7 @@ namespace roboclaw {
         ros::NodeHandle nh_private;
 
         ros::Publisher encoder_pub;
-        ros::Publisher battery_pub;
+        ros::Publisher input_voltage_pub;
         ros::Subscriber velocity_sub;
 
         ros::Time last_message;

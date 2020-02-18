@@ -53,7 +53,7 @@ add_message_files(
         FILES
         RoboclawEncoderSteps.msg
         RoboclawMotorVelocity.msg
-        RoboclawBatteryMessage.msg
+        RoboclawInputVoltageMessage.msg
 )
 
 ## Generate services in the 'srv' folder

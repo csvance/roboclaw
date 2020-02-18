@@ -1,2 +1,0 @@
-int32 index
-float32 battery_voltage

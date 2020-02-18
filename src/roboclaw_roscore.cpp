@@ -22,10 +22,8 @@
  */
 
 #include "roboclaw_roscore.h"
-
 #include <map>
 #include <string>
-
 #include <iostream>
 
 namespace roboclaw {
@@ -67,7 +65,7 @@ namespace roboclaw {
             roboclaw->reset_encoders(roboclaw_mapping[r]);
 
         encoder_pub = nh.advertise<roboclaw::RoboclawEncoderSteps>(std::string("motor_enc"), 10);
-        battery_pub = nh.advertise<roboclaw::RoboclawBatteryMessage>(std::string("battery_voltage"), 10);
+        input_voltage_pub = nh.advertise<roboclaw::RoboclawInputVoltageMessage>(std::string("roboclaw_input_voltage"), 10);
         velocity_sub = nh.subscribe(std::string("motor_cmd_vel"), 10, &roboclaw_roscore::velocity_callback, this);
 
     }
@@ -101,25 +99,25 @@ namespace roboclaw {
             ros::spinOnce();
             update_rate.sleep();
 
-            // Publish battery
+            // Publish input voltage
             for (int r = 0; r < roboclaw_mapping.size(); r++) {
-                int batt = 0;
+                int input_v = 0;
                 try {
-                    batt = roboclaw->get_voltage(roboclaw_mapping[r]);
+                    input_v = roboclaw->get_voltage(roboclaw_mapping[r]);
 
                 } catch(roboclaw::crc_exception &e){
-                    ROS_ERROR("RoboClaw CRC error during getting battery voltage!");
+                    ROS_ERROR("RoboClaw CRC error during getting input voltage!");
                     continue;
                 } catch(timeout_exception &e){
-                    ROS_ERROR("RoboClaw timout during getting battery voltage!");
+                    ROS_ERROR("RoboClaw timout during getting inputvoltage!");
                     continue;
                 }
 
-                RoboclawBatteryMessage battery_v;
-                battery_v.index = r;
-                battery_v.battery_voltage = (float) batt/10;
+                RoboclawInputVoltageMessage input_voltage_m;
+                input_voltage_m.index = r;
+                input_voltage_m.input_voltage = (float) input_v/10;
 
-                battery_pub.publish(battery_v);
+                input_voltage_pub.publish(input_voltage_m);
 
             }
 

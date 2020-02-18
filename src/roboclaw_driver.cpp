@@ -184,12 +184,12 @@ namespace roboclaw {
 
         txrx(address, 24, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
-        int battery_voltage = 0;
+        int input_voltage = 0;
 
-        battery_voltage += rx_buffer[0] << 8;
-        battery_voltage += rx_buffer[1];
+        input_voltage += rx_buffer[0] << 8;
+        input_voltage += rx_buffer[1];
 
-        return battery_voltage;
+        return input_voltage;
 
     }
 
