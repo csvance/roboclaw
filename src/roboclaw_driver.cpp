@@ -26,6 +26,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/bind.hpp>
 #include <boost/array.hpp>
+#include "ros/ros.h"
 
 namespace roboclaw {
 
@@ -93,7 +94,6 @@ namespace roboclaw {
             // RoboClaw expects big endian / MSB first
             packet[tx_length + 2] = (unsigned char) ((crc >> 8) & 0xFF);
             packet[tx_length + 2 + 1] = (unsigned char) (crc & 0xFF);
-
         }
 
         serial->write((char*)&packet[0], packet.size());
@@ -149,7 +149,6 @@ namespace roboclaw {
         trim(version);
 
         return version;
-
     }
 
     std::pair<int, int> driver::get_encoders(unsigned char address) {
@@ -175,6 +174,20 @@ namespace roboclaw {
         e2 += rx_buffer[3];
 
         return std::pair<int, int>((int) (int32_t) e1, (int) (int32_t) e2);
+    }
+
+    int driver::get_voltage(unsigned char address) {
+
+        unsigned char rx_buffer[2];
+
+        txrx(address, 24, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+
+        int input_voltage = 0;
+
+        input_voltage += rx_buffer[0] << 8;
+        input_voltage += rx_buffer[1];
+
+        return input_voltage;
     }
 
     std::pair<int, int> driver::get_velocity(unsigned char address) {
@@ -238,5 +251,4 @@ namespace roboclaw {
 
         txrx(address, 34, tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer), true, false);
     }
-
 }

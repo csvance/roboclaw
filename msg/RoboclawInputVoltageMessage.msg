@@ -1,0 +1,2 @@
+int32 index
+float32 input_voltage
