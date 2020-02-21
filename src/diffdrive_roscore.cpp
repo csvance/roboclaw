@@ -56,7 +56,7 @@ namespace roboclaw {
         }
 
         if(!nh_private.getParam("swap_motors", swap_motors))
-            swap_motors = false;
+            swap_motors = true;
         if(!nh_private.getParam("invert_motor_1", invert_motor_1))
             invert_motor_1 = false;
         if(!nh_private.getParam("invert_motor_2", invert_motor_2))
