@@ -67,7 +67,6 @@ namespace roboclaw {
         encoder_pub = nh.advertise<roboclaw::RoboclawEncoderSteps>(std::string("motor_enc"), 10);
         input_voltage_pub = nh.advertise<roboclaw::RoboclawInputVoltageMessage>(std::string("roboclaw_input_voltage"), 10);
         velocity_sub = nh.subscribe(std::string("motor_cmd_vel"), 10, &roboclaw_roscore::velocity_callback, this);
-
     }
 
     roboclaw_roscore::~roboclaw_roscore() {
@@ -85,7 +84,6 @@ namespace roboclaw {
         } catch(timeout_exception &e){
             ROS_ERROR("RoboClaw timout during set velocity!");
         }
-
     }
 
     void roboclaw_roscore::run() {
@@ -118,7 +116,6 @@ namespace roboclaw {
                 input_voltage_m.input_voltage = (float) input_v/10;
 
                 input_voltage_pub.publish(input_voltage_m);
-
             }
 
             // Publish encoders
@@ -139,11 +136,7 @@ namespace roboclaw {
                 enc_steps.mot1_enc_steps = encs.first;
                 enc_steps.mot2_enc_steps = encs.second;
                 encoder_pub.publish(enc_steps);
-
             }
-
-
-
 
             if (ros::Time::now() - last_message > ros::Duration(5)) {
                 for (int r = 0; r < roboclaw_mapping.size(); r++) {
@@ -156,8 +149,6 @@ namespace roboclaw {
                     }
                 }
             }
-
         }
     }
-
 }

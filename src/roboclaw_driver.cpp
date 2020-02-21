@@ -94,7 +94,6 @@ namespace roboclaw {
             // RoboClaw expects big endian / MSB first
             packet[tx_length + 2] = (unsigned char) ((crc >> 8) & 0xFF);
             packet[tx_length + 2 + 1] = (unsigned char) (crc & 0xFF);
-
         }
 
         serial->write((char*)&packet[0], packet.size());
@@ -150,7 +149,6 @@ namespace roboclaw {
         trim(version);
 
         return version;
-
     }
 
     std::pair<int, int> driver::get_encoders(unsigned char address) {
@@ -190,7 +188,6 @@ namespace roboclaw {
         input_voltage += rx_buffer[1];
 
         return input_voltage;
-
     }
 
     std::pair<int, int> driver::get_velocity(unsigned char address) {
@@ -239,8 +236,6 @@ namespace roboclaw {
         tx_buffer[7] = (unsigned char) (speed.second & 0xFF);
 
         txrx(address, 37, tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer), true, false);
-
-
     }
 
     void driver::set_duty(unsigned char address, std::pair<int, int> duty) {
@@ -256,5 +251,4 @@ namespace roboclaw {
 
         txrx(address, 34, tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer), true, false);
     }
-
 }
