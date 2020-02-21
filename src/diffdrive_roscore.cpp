@@ -40,6 +40,7 @@ namespace roboclaw {
 
         odom_pub = nh.advertise<nav_msgs::Odometry>(std::string("odom"), 10);
         motor_pub = nh.advertise<roboclaw::RoboclawMotorVelocity>(std::string("motor_cmd_vel"), 10);
+        joint_state_pub = nh.advertise<sensor_msgs::JointState>(std::string("joint_states"),10);
 
         encoder_sub = nh.subscribe(std::string("motor_enc"), 10, &diffdrive_roscore::encoder_callback, this);
         twist_sub = nh.subscribe(std::string("cmd_vel"), 10, &diffdrive_roscore::twist_callback, this);
@@ -72,6 +73,8 @@ namespace roboclaw {
             var_theta_z = 0.01;
         }
 
+        joint_states.name.push_back("wheel_left_joint");
+        joint_states.position.push_back(0.0);
     }
 
     void diffdrive_roscore::twist_callback(const geometry_msgs::Twist &msg) {
@@ -185,6 +188,25 @@ namespace roboclaw {
         last_x = cur_x;
         last_y = cur_y;
         last_theta = cur_theta;
+
+        double wheel_circumference_1 = 0.314;
+
+        double wheel_1_pos = msg.mot1_enc_steps/ steps_per_meter / wheel_circumference_1 * 2 * 3.14159265;
+
+        joint_states.header.stamp = ros::Time::now();
+        joint_states.position[0] = wheel_1_pos;
+        joint_state_pub.publish(joint_states);
+
+
+
+//std_msgs/Header header
+//  uint32 seq
+//  time stamp
+//  string frame_id
+//string[] name
+//float64[] position
+//float64[] velocity
+//float64[] effort
 
     }
 

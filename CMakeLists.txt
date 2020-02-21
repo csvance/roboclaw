@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
         nav_msgs
         roscpp
         rospy
+        sensor_msgs
         std_msgs
         tf
         )
@@ -75,6 +76,7 @@ generate_messages(
         DEPENDENCIES
         geometry_msgs
         nav_msgs
+        sensor_msgs
         std_msgs
 )
 
@@ -110,7 +112,7 @@ generate_messages(
 catkin_package(
         INCLUDE_DIRS include
         # LIBRARIES roboclaw
-        CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs tf
+        CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy sensor_msgs std_msgs tf
         #  DEPENDS system_lib
 )
 

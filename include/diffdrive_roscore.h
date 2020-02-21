@@ -29,6 +29,7 @@
 
 #include "roboclaw/RoboclawEncoderSteps.h"
 #include "nav_msgs/Odometry.h"
+#include "sensor_msgs/JointState.h"
 #include "geometry_msgs/Twist.h"
 
 namespace roboclaw {
@@ -43,6 +44,7 @@ namespace roboclaw {
 
         ros::Publisher odom_pub;
         ros::Publisher motor_pub;
+        ros::Publisher joint_state_pub;
 
         ros::Subscriber twist_sub;
         ros::Subscriber encoder_sub;
@@ -56,6 +58,9 @@ namespace roboclaw {
 
         double base_width;
         double steps_per_meter;
+        double wheel_circumference_1;
+
+        double wheel_1_pos;
 
         bool swap_motors;
         bool invert_motor_1;
@@ -64,6 +69,10 @@ namespace roboclaw {
         double var_pos_x;
         double var_pos_y;
         double var_theta_z;
+
+        sensor_msgs::JointState joint_states;
+
+
 
         void twist_callback(const geometry_msgs::Twist &msg);
 
