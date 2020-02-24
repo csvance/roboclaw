@@ -186,7 +186,6 @@ namespace roboclaw {
         transform.setRotation(tf::createQuaternionFromRPY(0.0, 0.0, cur_theta));
         br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", "base_link"));
 
-
         odom_pub.publish(odom);
 
         last_x = cur_x;
@@ -198,23 +197,12 @@ namespace roboclaw {
         double wheel_1_pos = msg.mot1_enc_steps/ steps_per_meter / wheel_circumference * 2 * 3.14159265;
         double wheel_2_pos = msg.mot2_enc_steps/ steps_per_meter / wheel_circumference * 2 * 3.14159265;
 
+        // Publish joint_state message
         joint_states.header.stamp = ros::Time::now();
         joint_states.position[0] = wheel_1_pos;
         joint_states.position[1] = wheel_2_pos;
         joint_state_pub.publish(joint_states);
 
-
-
-//std_msgs/Header header
-//  uint32 seq
-//  time stamp
-//  string frame_id
-//string[] name
-//float64[] position
-//float64[] velocity
-//float64[] effort
-
     }
-
 
 }
