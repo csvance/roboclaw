@@ -55,6 +55,9 @@ namespace roboclaw {
         if(!nh_private.getParam("steps_per_meter", steps_per_meter)) {
             throw std::runtime_error("Must specify steps_per_meter!");
         }
+        if(!nh_private.getParam("wheel_circumference", wheel_circumference)){
+            throw std::runtime_error("Must specify wheel circumference!");
+        }
 
         if(!nh_private.getParam("swap_motors", swap_motors))
             swap_motors = true;
@@ -191,8 +194,6 @@ namespace roboclaw {
         last_x = cur_x;
         last_y = cur_y;
         last_theta = cur_theta;
-
-        double wheel_circumference = 0.314;
 
         double wheel_1_pos = msg.mot1_enc_steps/ steps_per_meter / wheel_circumference * 2 * 3.14159265;
         double wheel_2_pos = msg.mot2_enc_steps/ steps_per_meter / wheel_circumference * 2 * 3.14159265;
