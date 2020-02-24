@@ -73,7 +73,10 @@ namespace roboclaw {
             var_theta_z = 0.01;
         }
 
+        // Initialize joint state publisher and allocate memory
         joint_states.name.push_back("wheel_left_joint");
+        joint_states.name.push_back("wheel_right_joint");
+        joint_states.position.push_back(0.0);
         joint_states.position.push_back(0.0);
     }
 
@@ -183,18 +186,21 @@ namespace roboclaw {
         transform.setRotation(tf::createQuaternionFromRPY(0.0, 0.0, cur_theta));
         br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", "base_link"));
 
+
         odom_pub.publish(odom);
 
         last_x = cur_x;
         last_y = cur_y;
         last_theta = cur_theta;
 
-        double wheel_circumference_1 = 0.314;
+        double wheel_circumference = 0.314;
 
-        double wheel_1_pos = msg.mot1_enc_steps/ steps_per_meter / wheel_circumference_1 * 2 * 3.14159265;
+        double wheel_1_pos = msg.mot1_enc_steps/ steps_per_meter / wheel_circumference * 2 * 3.14159265;
+        double wheel_2_pos = msg.mot2_enc_steps/ steps_per_meter / wheel_circumference * 2 * 3.14159265;
 
         joint_states.header.stamp = ros::Time::now();
         joint_states.position[0] = wheel_1_pos;
+        joint_states.position[1] = wheel_2_pos;
         joint_state_pub.publish(joint_states);
 
 

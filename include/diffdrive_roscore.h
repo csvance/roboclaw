@@ -49,6 +49,8 @@ namespace roboclaw {
         ros::Subscriber twist_sub;
         ros::Subscriber encoder_sub;
 
+        sensor_msgs::JointState joint_states;
+
         int last_steps_1;
         int last_steps_2;
 
@@ -58,9 +60,10 @@ namespace roboclaw {
 
         double base_width;
         double steps_per_meter;
-        double wheel_circumference_1;
+        double wheel_circumference;
 
         double wheel_1_pos;
+        double wheel_2_pos;
 
         bool swap_motors;
         bool invert_motor_1;
@@ -69,10 +72,6 @@ namespace roboclaw {
         double var_pos_x;
         double var_pos_y;
         double var_theta_z;
-
-        sensor_msgs::JointState joint_states;
-
-
 
         void twist_callback(const geometry_msgs::Twist &msg);
 
