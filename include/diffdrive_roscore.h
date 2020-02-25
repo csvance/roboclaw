@@ -24,6 +24,8 @@
 #ifndef PROJECT_DIFFDRIVE_ROSCORE_H
 #define PROJECT_DIFFDRIVE_ROSCORE_H
 
+#include <string>
+
 #include "ros/ros.h"
 #include "ros/package.h"
 
@@ -59,11 +61,16 @@ namespace roboclaw {
         double last_theta;
 
         double base_width;
-        double steps_per_meter;
-        double wheel_circumference;
+        double counts_per_revolution;
+        double wheel_radius;
 
-        double wheel_1_pos;
-        double wheel_2_pos;
+        double steps_per_meter;
+
+        std::string joint_1_name;
+        std::string joint_2_name;
+
+        double joint_1_pos;
+        double joint_2_pos;
 
         bool swap_motors;
         bool invert_motor_1;

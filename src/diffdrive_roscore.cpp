@@ -28,8 +28,10 @@
 #include "diffdrive_roscore.h"
 #include "roboclaw/RoboclawMotorVelocity.h"
 #include "geometry_msgs/Quaternion.h"
+#include "ros/console.h"
 #include "tf/transform_datatypes.h"
 #include "tf/transform_broadcaster.h"
+
 
 namespace roboclaw {
 
@@ -52,11 +54,17 @@ namespace roboclaw {
         if(!nh_private.getParam("base_width", base_width)){
             throw std::runtime_error("Must specify base_width!");
         }
-        if(!nh_private.getParam("steps_per_meter", steps_per_meter)) {
-            throw std::runtime_error("Must specify steps_per_meter!");
+        if(!nh_private.getParam("counts_per_revolution", counts_per_revolution)) {
+            throw std::runtime_error("Must specify encoder counts_per_revolution!");
         }
-        if(!nh_private.getParam("wheel_circumference", wheel_circumference)){
-            throw std::runtime_error("Must specify wheel circumference!");
+        if(!nh_private.getParam("wheel_radius", wheel_radius)){
+            throw std::runtime_error("Must specify wheel_radius!");
+        }
+        if(!nh_private.getParam("joint_1_name", joint_1_name)){
+            throw std::runtime_error("Must specify joint_1_name!");
+        }
+        if(!nh_private.getParam("joint_2_name", joint_2_name)){
+            throw std::runtime_error("Must specify joint_2_name!");
         }
 
         if(!nh_private.getParam("swap_motors", swap_motors))
@@ -76,9 +84,12 @@ namespace roboclaw {
             var_theta_z = 0.01;
         }
 
+        // Calculate steps/meter for further calculations
+        steps_per_meter = counts_per_revolution / ( 2 * wheel_radius * M_PI );
+
         // Initialize joint state publisher and allocate memory
-        joint_states.name.push_back("wheel_left_joint");
-        joint_states.name.push_back("wheel_right_joint");
+        joint_states.name.push_back(joint_1_name);
+        joint_states.name.push_back(joint_2_name);
         joint_states.position.push_back(0.0);
         joint_states.position.push_back(0.0);
     }
@@ -133,7 +144,7 @@ namespace roboclaw {
             delta_1 = -delta_1;
 
         if (invert_motor_2)
-            delta_1 = -delta_2;
+            delta_2 = -delta_2;
 
         if (swap_motors){
             int tmp = delta_1;
@@ -195,13 +206,13 @@ namespace roboclaw {
         last_y = cur_y;
         last_theta = cur_theta;
 
-        double wheel_1_pos = msg.mot1_enc_steps/ steps_per_meter / wheel_circumference * 2 * 3.14159265;
-        double wheel_2_pos = msg.mot2_enc_steps/ steps_per_meter / wheel_circumference * 2 * 3.14159265;
+        double joint_1_pos = msg.mot1_enc_steps/ counts_per_revolution *2 * M_PI;
+        double joint_2_pos = msg.mot2_enc_steps/ counts_per_revolution *2 * M_PI;
 
         // Publish joint_state message
         joint_states.header.stamp = ros::Time::now();
-        joint_states.position[0] = wheel_1_pos;
-        joint_states.position[1] = wheel_2_pos;
+        joint_states.position[0] = joint_1_pos;
+        joint_states.position[1] = joint_2_pos;
         joint_state_pub.publish(joint_states);
 
     }
