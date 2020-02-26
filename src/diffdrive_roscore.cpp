@@ -60,11 +60,11 @@ namespace roboclaw {
         if(!nh_private.getParam("wheel_radius", wheel_radius)){
             throw std::runtime_error("Must specify wheel_radius!");
         }
-        if(!nh_private.getParam("joint_1_name", joint_1_name)){
-            throw std::runtime_error("Must specify joint_1_name!");
+        if(!nh_private.getParam("joint_left_name", joint_left_name)){
+            throw std::runtime_error("Must specify joint_left_name!");
         }
-        if(!nh_private.getParam("joint_2_name", joint_2_name)){
-            throw std::runtime_error("Must specify joint_2_name!");
+        if(!nh_private.getParam("joint_right_name", joint_right_name)){
+            throw std::runtime_error("Must specify joint_right_name!");
         }
 
         if(!nh_private.getParam("swap_motors", swap_motors))
@@ -88,8 +88,8 @@ namespace roboclaw {
         steps_per_meter = counts_per_revolution / ( 2 * wheel_radius * M_PI );
 
         // Initialize joint state publisher and allocate memory
-        joint_states.name.push_back(joint_1_name);
-        joint_states.name.push_back(joint_2_name);
+        joint_states.name.push_back(joint_left_name);
+        joint_states.name.push_back(joint_right_name);
         joint_states.position.push_back(0.0);
         joint_states.position.push_back(0.0);
     }
@@ -206,13 +206,13 @@ namespace roboclaw {
         last_y = cur_y;
         last_theta = cur_theta;
 
-        double joint_1_pos = msg.mot1_enc_steps/ counts_per_revolution *2 * M_PI;
-        double joint_2_pos = msg.mot2_enc_steps/ counts_per_revolution *2 * M_PI;
+        double joint_left_pos = msg.mot1_enc_steps/ counts_per_revolution *2 * M_PI;
+        double joint_right_pos = msg.mot2_enc_steps/ counts_per_revolution *2 * M_PI;
 
         // Publish joint_state message
         joint_states.header.stamp = ros::Time::now();
-        joint_states.position[0] = joint_1_pos;
-        joint_states.position[1] = joint_2_pos;
+        joint_states.position[0] = joint_left_pos;
+        joint_states.position[1] = joint_right_pos;
         joint_state_pub.publish(joint_states);
 
     }

@@ -66,11 +66,11 @@ namespace roboclaw {
 
         double steps_per_meter;
 
-        std::string joint_1_name;
-        std::string joint_2_name;
+        std::string joint_left_name;
+        std::string joint_right_name;
 
-        double joint_1_pos;
-        double joint_2_pos;
+        double joint_left_pos;
+        double joint_right_pos;
 
         bool swap_motors;
         bool invert_motor_1;
