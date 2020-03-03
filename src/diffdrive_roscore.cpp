@@ -28,8 +28,10 @@
 #include "diffdrive_roscore.h"
 #include "roboclaw/RoboclawMotorVelocity.h"
 #include "geometry_msgs/Quaternion.h"
+#include "ros/console.h"
 #include "tf/transform_datatypes.h"
 #include "tf/transform_broadcaster.h"
+
 
 namespace roboclaw {
 
@@ -40,6 +42,7 @@ namespace roboclaw {
 
         odom_pub = nh.advertise<nav_msgs::Odometry>(std::string("odom"), 10);
         motor_pub = nh.advertise<roboclaw::RoboclawMotorVelocity>(std::string("motor_cmd_vel"), 10);
+        joint_state_pub = nh.advertise<sensor_msgs::JointState>(std::string("joint_states"),10);
 
         encoder_sub = nh.subscribe(std::string("motor_enc"), 10, &diffdrive_roscore::encoder_callback, this);
         twist_sub = nh.subscribe(std::string("cmd_vel"), 10, &diffdrive_roscore::twist_callback, this);
@@ -51,8 +54,17 @@ namespace roboclaw {
         if(!nh_private.getParam("base_width", base_width)){
             throw std::runtime_error("Must specify base_width!");
         }
-        if(!nh_private.getParam("steps_per_meter", steps_per_meter)) {
-            throw std::runtime_error("Must specify steps_per_meter!");
+        if(!nh_private.getParam("counts_per_revolution", counts_per_revolution)) {
+            throw std::runtime_error("Must specify encoder counts_per_revolution!");
+        }
+        if(!nh_private.getParam("wheel_radius", wheel_radius)){
+            throw std::runtime_error("Must specify wheel_radius!");
+        }
+        if(!nh_private.getParam("joint_left_name", joint_left_name)){
+            throw std::runtime_error("Must specify joint_left_name!");
+        }
+        if(!nh_private.getParam("joint_right_name", joint_right_name)){
+            throw std::runtime_error("Must specify joint_right_name!");
         }
 
         if(!nh_private.getParam("swap_motors", swap_motors))
@@ -72,6 +84,14 @@ namespace roboclaw {
             var_theta_z = 0.01;
         }
 
+        // Calculate steps/meter for further calculations
+        steps_per_meter = counts_per_revolution / ( 2 * wheel_radius * M_PI );
+
+        // Initialize joint state publisher and allocate memory
+        joint_states.name.push_back(joint_left_name);
+        joint_states.name.push_back(joint_right_name);
+        joint_states.position.push_back(0.0);
+        joint_states.position.push_back(0.0);
     }
 
     void diffdrive_roscore::twist_callback(const geometry_msgs::Twist &msg) {
@@ -124,7 +144,7 @@ namespace roboclaw {
             delta_1 = -delta_1;
 
         if (invert_motor_2)
-            delta_1 = -delta_2;
+            delta_2 = -delta_2;
 
         if (swap_motors){
             int tmp = delta_1;
@@ -186,7 +206,15 @@ namespace roboclaw {
         last_y = cur_y;
         last_theta = cur_theta;
 
-    }
+        double joint_left_pos = msg.mot1_enc_steps/ counts_per_revolution *2 * M_PI;
+        double joint_right_pos = msg.mot2_enc_steps/ counts_per_revolution *2 * M_PI;
 
+        // Publish joint_state message
+        joint_states.header.stamp = ros::Time::now();
+        joint_states.position[0] = joint_left_pos;
+        joint_states.position[1] = joint_right_pos;
+        joint_state_pub.publish(joint_states);
+
+    }
 
 }

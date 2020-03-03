@@ -24,11 +24,14 @@
 #ifndef PROJECT_DIFFDRIVE_ROSCORE_H
 #define PROJECT_DIFFDRIVE_ROSCORE_H
 
+#include <string>
+
 #include "ros/ros.h"
 #include "ros/package.h"
 
 #include "roboclaw/RoboclawEncoderSteps.h"
 #include "nav_msgs/Odometry.h"
+#include "sensor_msgs/JointState.h"
 #include "geometry_msgs/Twist.h"
 
 namespace roboclaw {
@@ -43,9 +46,12 @@ namespace roboclaw {
 
         ros::Publisher odom_pub;
         ros::Publisher motor_pub;
+        ros::Publisher joint_state_pub;
 
         ros::Subscriber twist_sub;
         ros::Subscriber encoder_sub;
+
+        sensor_msgs::JointState joint_states;
 
         int last_steps_1;
         int last_steps_2;
@@ -55,7 +61,16 @@ namespace roboclaw {
         double last_theta;
 
         double base_width;
+        double counts_per_revolution;
+        double wheel_radius;
+
         double steps_per_meter;
+
+        std::string joint_left_name;
+        std::string joint_right_name;
+
+        double joint_left_pos;
+        double joint_right_pos;
 
         bool swap_motors;
         bool invert_motor_1;
