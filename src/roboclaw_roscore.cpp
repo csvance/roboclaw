@@ -80,7 +80,7 @@ namespace roboclaw {
         last_message = ros::Time::now();
 
         try {
-            roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(msg.mot1_vel_sps, msg.mot2_vel_sps));
+            roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int32_t, int32_t>(msg.mot1_vel_sps, msg.mot2_vel_sps));
         } catch(roboclaw::crc_exception &e){
             ROS_ERROR("RoboClaw CRC error during set velocity!");
         } catch(timeout_exception &e){
