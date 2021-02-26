@@ -6,15 +6,16 @@ set(CMAKE_CXX_STANDARD 14)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
-        geometry_msgs
-        nav_msgs
-        roscpp
-        rospy
-        sensor_msgs
-        std_msgs
-        tf
-        )
+find_package(catkin REQUIRED
+  COMPONENTS
+    geometry_msgs
+    nav_msgs
+    roscpp
+    rospy
+    sensor_msgs
+    std_msgs
+    tf
+)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -51,10 +52,10 @@ find_package(Boost REQUIRED COMPONENTS system)
 
 ## Generate messages in the 'msg' folder
 add_message_files(
-        FILES
-        RoboclawEncoderSteps.msg
-        RoboclawMotorVelocity.msg
-        RoboclawInputVoltageMessage.msg
+  FILES
+    RoboclawEncoderSteps.msg
+    RoboclawMotorVelocity.msg
+    RoboclawInputVoltageMessage.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -73,11 +74,11 @@ add_message_files(
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-        DEPENDENCIES
-        geometry_msgs
-        nav_msgs
-        sensor_msgs
-        std_msgs
+  DEPENDENCIES
+    geometry_msgs
+    nav_msgs
+    sensor_msgs
+    std_msgs
 )
 
 ################################################
@@ -110,10 +111,15 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-        INCLUDE_DIRS include
-        # LIBRARIES roboclaw
-        CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy sensor_msgs std_msgs tf
-        #  DEPENDS system_lib
+  CATKIN_DEPENDS
+    geometry_msgs
+    nav_msgs
+    roscpp
+    rospy
+    sensor_msgs
+    std_msgs
+    tf
+    message_runtime
 )
 
 ###########
