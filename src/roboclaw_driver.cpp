@@ -139,6 +139,21 @@ namespace roboclaw {
             return bytes_received - 2;
     }
 
+    int driver::read_err(unsigned char address) {
+
+        unsigned char rx_buffer[4];
+
+        txrx(address, 90, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+        uint32_t err = 0;
+
+        err += rx_buffer[0] << 24;
+        err += rx_buffer[1] << 16;
+        err += rx_buffer[2] << 8;
+        err += rx_buffer[3];
+
+        return err;
+    }
+
     std::string driver::get_version(unsigned char address) {
 
         unsigned char rx_buffer[48];

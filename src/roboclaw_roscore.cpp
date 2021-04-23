@@ -25,6 +25,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <ros/console.h>
 
 namespace roboclaw {
 
@@ -136,6 +137,25 @@ namespace roboclaw {
                 enc_steps.mot1_enc_steps = encs.first;
                 enc_steps.mot2_enc_steps = encs.second;
                 encoder_pub.publish(enc_steps);
+            }
+
+            // Print errors
+            for (int r = 0; r < roboclaw_mapping.size(); r++) {
+                int err;
+                try {
+                   err = roboclaw->read_err(roboclaw_mapping[r]);
+
+                } catch(roboclaw::crc_exception &e){
+                    ROS_ERROR("RoboClaw CRC error during getting error!");
+                    continue;
+                } catch(timeout_exception &e){
+                    ROS_ERROR("RoboClaw timout during getting error!");
+                    continue;
+                }
+
+                if (err != 0) {
+                    ROS_ERROR_STREAM("RoboClaw error (see user manual): " << std::hex << err);
+                }
             }
 
             if (ros::Time::now() - last_message > ros::Duration(5)) {
