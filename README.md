@@ -9,7 +9,7 @@ Roboclaw is an extensible series of [Roboclaw][roboclaw] nodes for [ROS][ros]
 - Written in roscpp for effecient memory usage and performance
 
 ## Requirements
-- ROS Kinetic/Lunar/Melodic
+- ROS Kinetic/Lunar/Melodic/Noetic
 
 ## Nodes
 
@@ -27,6 +27,7 @@ Roboclaw is an extensible series of [Roboclaw][roboclaw] nodes for [ROS][ros]
 | Action | Topic | Type |
 | :------------- |:-------------| :-----|
 | publish | motor_enc_steps | roboclaw/RoboclawEncoderSteps |
+| publish | roboclaw_input_voltage | roboclaw/RoboClawInputVoltageMessage|
 | subscribe | motor_cmd_vel | roboclaw/RoboclawMotorVelocity |
 
 #### Notes

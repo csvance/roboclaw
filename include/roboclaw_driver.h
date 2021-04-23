@@ -38,6 +38,8 @@ namespace roboclaw {
     public:
         driver(std::string port, unsigned int baudrate);
 
+        int read_err(unsigned char address);
+
         std::string get_version(unsigned char address);
 
         std::pair<int, int> get_encoders(unsigned char address);
