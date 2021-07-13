@@ -209,7 +209,7 @@ namespace roboclaw {
 
         unsigned char rx_buffer[5];
 
-        txrx(address, 18, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+        txrx(address, 30, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
         uint32_t e1 = 0;
 
@@ -218,7 +218,7 @@ namespace roboclaw {
         e1 += rx_buffer[2] << 8;
         e1 += rx_buffer[3];
 
-        txrx(address, 19, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+        txrx(address, 31, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
         uint32_t e2 = 0;
 

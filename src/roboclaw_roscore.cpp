@@ -111,6 +111,7 @@ namespace roboclaw {
 
     void roboclaw_roscore::run() {
         error_it_count = 0;
+        int speed_error_count = 0;
         old_err = 0;
         last_message = ros::Time::now();
         loop_rate = 50;
@@ -170,6 +171,8 @@ namespace roboclaw {
             for (int r = 0; r < roboclaw_mapping.size(); r++) {
                 // If previous error was present, count to 10 seconds and continue blocking motors.
                 // ToDo: Adapt for multiple RoboClaws. Only 1 in robot so currently no use and no possibility to test
+
+
                 if ((error_blocking == true) && (error_it_count < loop_rate*10)) {
                     error_it_count++;
                 } else {
@@ -235,6 +238,35 @@ namespace roboclaw {
                             ROS_ERROR_STREAM("RoboClaw error. Velocity commands will be blocked for 10 seconds. Error number (see RoboClaw manual page 73): " << std::hex << err);
                         }
                     }
+                }
+            }
+
+            // Detect large speed differences in desired velocity and actual velocity
+            for (int r = 0; r < roboclaw_mapping.size(); r++) {
+                std::pair<int, int> velocity = std::pair<int, int>(0, 0);
+                try {
+                    velocity = roboclaw->get_velocity(roboclaw_mapping[r]);
+                } catch(roboclaw::crc_exception &e){
+                    ROS_ERROR("RoboClaw CRC error during getting velocity");
+                    continue;
+                } catch(timeout_exception &e){
+                    ROS_ERROR("RoboClaw timout during getting velocity!");
+                    continue;
+                }
+                int motor_1_speed = abs(velocity.first);
+                int motor_2_speed = abs(velocity.second);
+
+                double speed_error_factor = 0.85;
+
+                if (( motor_1_speed < abs(  speed_error_factor * motor_1_vel_cmd )) || (motor_2_speed  < abs( speed_error_factor * motor_2_vel_cmd ))){
+                    speed_error_count++;
+                    if (speed_error_count > loop_rate*1){
+                        error_blocking = true;
+                        error_it_count = 0;
+                        ROS_ERROR("Difference in cmd vel and actual wheel vel has been more than 15% for 1 second! Blocking velocity commands for 10 seconds.");
+                    }
+                } else {
+                    speed_error_count = 0;
                 }
             }
 
