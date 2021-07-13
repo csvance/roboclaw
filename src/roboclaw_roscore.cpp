@@ -115,6 +115,8 @@ namespace roboclaw {
         old_err = 0;
         last_message = ros::Time::now();
         loop_rate = 50;
+        double speed_error_factor = 0.85;
+
 
         ros::Rate update_rate(loop_rate);
 
@@ -178,7 +180,7 @@ namespace roboclaw {
                 } else {
                     error_blocking = false;
 
-                    // If blocking period has expired, old error can be cleared to make sure that new errors are displayed again
+                    // If blocking period has expired, old error must be cleared to make sure that new errors are displayed again
                     old_err = 0;
                     same_err_count = 0;
                     error_it_count = 0;
@@ -243,6 +245,7 @@ namespace roboclaw {
 
             // Detect large speed differences in desired velocity and actual velocity
             for (int r = 0; r < roboclaw_mapping.size(); r++) {
+                // Get instantaneous velocity (1/300th of a second)
                 std::pair<int, int> velocity = std::pair<int, int>(0, 0);
                 try {
                     velocity = roboclaw->get_velocity(roboclaw_mapping[r]);
@@ -256,17 +259,45 @@ namespace roboclaw {
                 int motor_1_speed = abs(velocity.first);
                 int motor_2_speed = abs(velocity.second);
 
-                double speed_error_factor = 0.85;
-
                 if (( motor_1_speed < abs(  speed_error_factor * motor_1_vel_cmd )) || (motor_2_speed  < abs( speed_error_factor * motor_2_vel_cmd ))){
+                    // if 1 of 2 absolute motor speeds is more than 1 - speed_error_factor different
                     speed_error_count++;
-                    if (speed_error_count > loop_rate*1){
+                    if (speed_error_count >= loop_rate*2){
+                        // Difference must be present for more than 2 seconds
+
                         error_blocking = true;
                         error_it_count = 0;
-                        ROS_ERROR("Difference in cmd vel and actual wheel vel has been more than 15% for 1 second! Blocking velocity commands for 10 seconds.");
+
+                        if (speed_error_count % loop_rate == 0){
+                            // Execute once per second and at beginning
+                            ROS_ERROR("Difference in cmd vel and actual wheel vel has been more than 15 percent for 2 seconds! Blocking velocity commands for 10 seconds.");
+
+                            // Set velocity and duty to 0. Only setting velocity to zero results in holding torque which is not desired.
+                            try {
+                                roboclaw->set_velocity(roboclaw_mapping[r], std::pair<int, int>(0, 0));
+                            } catch(roboclaw::crc_exception &e){
+                                ROS_ERROR("RoboClaw CRC error setting duty cycle!");
+                            } catch(timeout_exception &e) {
+                                ROS_ERROR("RoboClaw timout during setting duty cycle!");
+                            }
+
+                            try {
+                                roboclaw->set_duty(roboclaw_mapping[r], std::pair<int, int>(0, 0));
+                            } catch(roboclaw::crc_exception &e){
+                                ROS_ERROR("RoboClaw CRC error setting duty cycle!");
+                            } catch(timeout_exception &e) {
+                                ROS_ERROR("RoboClaw timout during setting duty cycle!");
+                            }
+                        }
                     }
                 } else {
                     speed_error_count = 0;
+                }
+                if (speed_error_count > loop_rate*10) {
+                    // If error is generated again (i.e. by navigation), this unblocks execution after 10 seconds
+                    ROS_INFO("Resetting speed error count. Trying to move again");
+                    speed_error_count = 0;
+                    error_blocking = false;
                 }
             }
 
