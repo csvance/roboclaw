@@ -47,6 +47,7 @@ namespace roboclaw {
             num_roboclaws = 1;
 
         roboclaw_mapping = std::map<int, unsigned char>();
+        error_blocking = false;
 
         // Create address map
         if (num_roboclaws > 1) {
@@ -77,9 +78,30 @@ namespace roboclaw {
 
     void roboclaw_roscore::velocity_callback(const roboclaw::RoboclawMotorVelocity &msg) {
         last_message = ros::Time::now();
+        motor_1_vel_cmd = msg.mot1_vel_sps;
+        motor_2_vel_cmd = msg.mot2_vel_sps;
 
         try {
-            roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(msg.mot1_vel_sps, msg.mot2_vel_sps));
+            if (error_blocking == true) {
+                // Set zero duty if blocking is detected
+                try {
+                        roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(0, 0));
+                } catch(roboclaw::crc_exception &e){
+                        ROS_ERROR("RoboClaw CRC error setting duty cycle!");
+                } catch(timeout_exception &e) {
+                        ROS_ERROR("RoboClaw timout during setting duty cycle!");
+                }
+                try {
+                        roboclaw->set_duty(roboclaw_mapping[msg.index], std::pair<int, int>(0, 0));
+                } catch(roboclaw::crc_exception &e){
+                        ROS_ERROR("RoboClaw CRC error setting duty cycle!");
+                } catch(timeout_exception &e) {
+                        ROS_ERROR("RoboClaw timout during setting duty cycle!");
+                }
+                ROS_DEBUG("RoboClaw error while executing velocity command. Roboclaw will not respond");
+                return;
+            }
+            roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(motor_1_vel_cmd, motor_2_vel_cmd));
         } catch(roboclaw::crc_exception &e){
             ROS_ERROR("RoboClaw CRC error during set velocity!");
         } catch(timeout_exception &e){
@@ -88,10 +110,14 @@ namespace roboclaw {
     }
 
     void roboclaw_roscore::run() {
-
+        error_it_count = 0;
+        old_err = 0;
         last_message = ros::Time::now();
+        loop_rate = 50;
 
-        ros::Rate update_rate(10);
+        ros::Rate update_rate(loop_rate);
+
+        int same_err_count = 0;
 
         while (ros::ok()) {
 
@@ -139,8 +165,23 @@ namespace roboclaw {
                 encoder_pub.publish(enc_steps);
             }
 
-            // Print errors
+
+            // Print errors and stop motors if errors occur
             for (int r = 0; r < roboclaw_mapping.size(); r++) {
+                // If previous error was present, count to 10 seconds and continue blocking motors.
+                // ToDo: Adapt for multiple RoboClaws. Only 1 in robot so currently no use and no possibility to test
+                if ((error_blocking == true) && (error_it_count < loop_rate*10)) {
+                        error_it_count++;
+                    }
+                else {
+                    error_blocking = false;
+
+                    // If blocking period has expired, old error can be cleared to make sure that new errors are displayed again
+                    old_err = 0;
+                    same_err_count = 0;
+                    error_it_count = 0;
+                }
+
                 int err;
                 try {
                    err = roboclaw->read_err(roboclaw_mapping[r]);
@@ -154,7 +195,48 @@ namespace roboclaw {
                 }
 
                 if (err != 0) {
-                    ROS_ERROR_STREAM("RoboClaw error (see user manual): " << std::hex << err);
+                    // Error found. First block velocity publisher
+                    error_blocking = true;
+
+                    // Set velocity and duty to 0. Only setting velocity to zero results in holding torque which is not desired.
+                    try {
+                        roboclaw->set_velocity(roboclaw_mapping[r], std::pair<int, int>(0, 0));
+                    } catch(roboclaw::crc_exception &e){
+                        ROS_ERROR("RoboClaw CRC error setting duty cycle!");
+                    } catch(timeout_exception &e) {
+                        ROS_ERROR("RoboClaw timout during setting duty cycle!");
+                    }
+
+                    try {
+                        roboclaw->set_duty(roboclaw_mapping[r], std::pair<int, int>(0, 0));
+                    } catch(roboclaw::crc_exception &e){
+                        ROS_ERROR("RoboClaw CRC error setting duty cycle!");
+                    } catch(timeout_exception &e) {
+                        ROS_ERROR("RoboClaw timout during setting duty cycle!");
+                    }
+
+                    // Start counting error iterations for blocking. Every new error blocks motors 10 seconds
+                    error_it_count = 0;
+
+                    // Start counting duplicate errors to not spam the terminal
+                    if (old_err == err){
+                        same_err_count++;
+                    } else
+                    {
+                        same_err_count = 0;
+                    }
+                    old_err = err;
+
+                    // Display error when detected and for every second afterwards
+                    if ( (same_err_count % loop_rate) == 0){
+                        if (err == 65536) {
+                            ROS_ERROR_STREAM("RoboClaw error. Velocity commands will be blocked for 10 seconds. Error number 10000 = M1 over current!");
+                        } else if (err == 131072) {
+                            ROS_ERROR_STREAM("RoboClaw error. Velocity commands will be blocked for 10 seconds. Error number 20000 = M2 over current!");
+                        } else {
+                            ROS_ERROR_STREAM("RoboClaw error. Velocity commands will be blocked for 10 seconds. Error number (see RoboClaw manual page 73): " << std::hex << err);
+                        }
+                    }
                 }
             }
 

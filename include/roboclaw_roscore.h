@@ -47,6 +47,15 @@ namespace roboclaw {
 
         std::map<int, unsigned char> roboclaw_mapping;
 
+        bool error_blocking;
+        int error_it_count;
+
+        int motor_1_vel_cmd;
+        int motor_2_vel_cmd;
+
+        int loop_rate;
+        int old_err;
+
         ros::NodeHandle nh;
         ros::NodeHandle nh_private;
 
