@@ -171,9 +171,8 @@ namespace roboclaw {
                 // If previous error was present, count to 10 seconds and continue blocking motors.
                 // ToDo: Adapt for multiple RoboClaws. Only 1 in robot so currently no use and no possibility to test
                 if ((error_blocking == true) && (error_it_count < loop_rate*10)) {
-                        error_it_count++;
-                    }
-                else {
+                    error_it_count++;
+                } else {
                     error_blocking = false;
 
                     // If blocking period has expired, old error can be cleared to make sure that new errors are displayed again
@@ -221,8 +220,7 @@ namespace roboclaw {
                     // Start counting duplicate errors to not spam the terminal
                     if (old_err == err){
                         same_err_count++;
-                    } else
-                    {
+                    } else {
                         same_err_count = 0;
                     }
                     old_err = err;
