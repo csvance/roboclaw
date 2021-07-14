@@ -8,6 +8,15 @@
         <param name="~serial_port" value="/dev/ttyS0"/>
         <param name="~baudrate" value="115200"/>
         <param name="~roboclaws" value="1"/>
+
+        <!-- Error parameters.
+        speed_error_factor: factor that wheel speed can differ from cmd_vel for speed_diff_time
+        before velocity commands are blocked for error_blocking_time seconds
+        loop_rate: frequency of error detecting loop. If RoboClaw error is detected, velocity commands are blocked for error_blocking_time seconds-->
+        <param name="~speed_error_factor" value="0.85" />
+        <param name="~speed_diff_time" value="2.0"/>
+        <param name="~loop_rate" value="50"/>
+        <param name="~error_blocking_time" value="10.0"/>
     </node>
 
 

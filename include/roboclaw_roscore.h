@@ -40,6 +40,8 @@ namespace roboclaw {
         roboclaw_roscore(ros::NodeHandle nh, ros::NodeHandle nh_private);
         ~roboclaw_roscore();
 
+        void set_velocity_duty_zero(int index);
+
         void run();
 
     private:
@@ -55,6 +57,11 @@ namespace roboclaw {
 
         int loop_rate;
         int old_err;
+
+        double blocking_time;
+        double speed_diff_time;
+        double speed_error_factor;
+
 
         ros::NodeHandle nh;
         ros::NodeHandle nh_private;
