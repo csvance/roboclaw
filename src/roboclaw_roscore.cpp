@@ -111,16 +111,15 @@ namespace roboclaw {
 
     void roboclaw_roscore::run() {
         error_it_count = 0;
-        int speed_error_count = 0;
         old_err = 0;
         last_message = ros::Time::now();
         loop_rate = 50;
-        double speed_error_factor = 0.85;
-
-
-        ros::Rate update_rate(loop_rate);
 
         int same_err_count = 0;
+        int speed_error_count = 0;
+        double speed_error_factor = 0.85;
+
+        ros::Rate update_rate(loop_rate);
 
         while (ros::ok()) {
 
