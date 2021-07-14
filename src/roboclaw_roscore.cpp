@@ -108,16 +108,17 @@ namespace roboclaw {
     }
 
     void roboclaw_roscore::velocity_callback(const roboclaw::RoboclawMotorVelocity &msg) {
+        if (error_blocking) {
+                set_velocity_duty_zero(msg.index);
+                ROS_DEBUG("RoboClaw error while executing velocity command. Roboclaw will not respond");
+                return;
+            }
+
         last_message = ros::Time::now();
         motor_1_vel_cmd = msg.mot1_vel_sps;
         motor_2_vel_cmd = msg.mot2_vel_sps;
 
         try {
-            if (error_blocking) {
-                set_velocity_duty_zero(msg.index);
-                ROS_DEBUG("RoboClaw error while executing velocity command. Roboclaw will not respond");
-                return;
-            }
             roboclaw->set_velocity(roboclaw_mapping[msg.index], std::pair<int, int>(motor_1_vel_cmd, motor_2_vel_cmd));
         } catch(roboclaw::crc_exception &e){
             ROS_ERROR("RoboClaw CRC error during set velocity!");
