@@ -231,12 +231,81 @@ namespace roboclaw {
 
                     // Display error when detected and for every second afterwards
                     if ( (same_err_count % loop_rate) == 0){
-                        if (err == 65536) {
-                            ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x010000 = M1 over current!",blocking_time);
-                        } else if (err == 131072) {
-                            ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x020000 = M2 over current!",blocking_time);
-                        } else {
-                            ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number (see RoboClaw manual page 73): %#010x",blocking_time,err);
+                        switch (err) {
+                            case 1:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000001 = E-stop!",blocking_time);
+                                break;
+                            case 2:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000002 = Temperature Error",blocking_time);
+                                break;
+                            case 4:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000004 = Temperature 2 Error",blocking_time);
+                                break;
+                            case 8:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000008 = Main Voltage High Error!",blocking_time);
+                                break;
+                            case 16:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000010 = Logic Voltage High Error!",blocking_time);
+                                break;
+                            case 32:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000020 = Logic Voltage Low Error!",blocking_time);
+                                break;
+                            case 64:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000040 = M1 Driver Fault Error",blocking_time);
+                                break;
+                            case 128:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000080 = M2 Driver Fault Error!",blocking_time);
+                                break;
+                            case 256:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000100 = M1 Speed Error",blocking_time);
+                                break;
+                            case 512:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000200 = M2 Speed Error",blocking_time);
+                                break;
+                            case 1024:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000400 = M1 Position Error",blocking_time);
+                                break;
+                            case 2048:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x000800 = M2 Position Error",blocking_time);
+                                break;
+                            case 4096:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x001000 = M1 Current Error",blocking_time);
+                                break;
+                            case 8192:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x002000 = M2 Current Error",blocking_time);
+                                break;
+                            case 65536:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x010000 = M1 Over Current Warning",blocking_time);
+                                break;
+                            case 131072:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x020000 = M2 Over Current Warning",blocking_time);
+                                break;
+                            case 262144:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x040000 = Main Voltage High Warning",blocking_time);
+                                break;
+                            case 524288:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x080000 = Main Voltage Low Warning",blocking_time);
+                                break;
+                            case 1048576:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x100000 = Temperature Warning",blocking_time);
+                                break;
+                            case 2097152:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x200000 = Temperature 2 Warning",blocking_time);
+                                break;
+                            case 4194304:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x400000 = S4 signal triggered",blocking_time);
+                                break;
+                            case 8388608:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x800000 = S5 signal triggered",blocking_time);
+                                break;
+                            case 16777216:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x01000000 = Speed Error Limit Warning",blocking_time);
+                                break;
+                            case 33554432:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number 0x02000000 = Position Error Limit Warning",blocking_time);
+                                break;
+                            default:
+                                ROS_ERROR("RoboClaw error. Velocity commands will be blocked for %.1f seconds. Error number (see RoboClaw manual page 73): %#010x",blocking_time,err);
                         }
                     }
                 }
