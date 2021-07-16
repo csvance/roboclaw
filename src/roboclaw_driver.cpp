@@ -143,7 +143,7 @@ namespace roboclaw {
 
         unsigned char rx_buffer[4];
 
-        txrx(address, 90, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+        txrx(address, R_read_status, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
         uint32_t err = 0;
 
         err += rx_buffer[0] << 24;
@@ -158,7 +158,7 @@ namespace roboclaw {
 
         unsigned char rx_buffer[48];
 
-        txrx(address, 21, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+        txrx(address, R_read_firmware_version, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
         std::string version = std::string(reinterpret_cast< char const * >(rx_buffer));
         trim(version);
@@ -170,7 +170,7 @@ namespace roboclaw {
 
         unsigned char rx_buffer[5];
 
-        txrx(address, 16, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+        txrx(address, R_read_encoder_count_M1, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
         uint32_t e1 = 0;
 
@@ -179,7 +179,7 @@ namespace roboclaw {
         e1 += rx_buffer[2] << 8;
         e1 += rx_buffer[3];
 
-        txrx(address, 17, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+        txrx(address, R_read_encoder_count_M2, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
         uint32_t e2 = 0;
 
@@ -195,7 +195,7 @@ namespace roboclaw {
 
         unsigned char rx_buffer[2];
 
-        txrx(address, 24, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+        txrx(address, R_read_main_battery_voltage_level, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
         int input_voltage = 0;
 
@@ -209,7 +209,7 @@ namespace roboclaw {
 
         unsigned char rx_buffer[5];
 
-        txrx(address, 18, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+        txrx(address, R_read_raw_speed_M1, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
         uint32_t e1 = 0;
 
@@ -218,7 +218,7 @@ namespace roboclaw {
         e1 += rx_buffer[2] << 8;
         e1 += rx_buffer[3];
 
-        txrx(address, 19, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
+        txrx(address, R_read_raw_speed_M2, nullptr, 0, rx_buffer, sizeof(rx_buffer), false, true);
 
         uint32_t e2 = 0;
 
@@ -232,7 +232,7 @@ namespace roboclaw {
 
     void driver::reset_encoders(unsigned char address) {
         unsigned char rx_buffer[1];
-        txrx(address, 20, nullptr, 0, rx_buffer, sizeof(rx_buffer), true, false);
+        txrx(address, R_reset_encoders, nullptr, 0, rx_buffer, sizeof(rx_buffer), true, false);
     }
 
     void driver::set_velocity(unsigned char address, std::pair<int, int> speed) {
@@ -250,7 +250,7 @@ namespace roboclaw {
         tx_buffer[6] = (unsigned char) ((speed.second >> 8) & 0xFF);
         tx_buffer[7] = (unsigned char) (speed.second & 0xFF);
 
-        txrx(address, 37, tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer), true, false);
+        txrx(address, R_drive_M1M2_signed_speed, tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer), true, false);
     }
 
     void driver::set_duty(unsigned char address, std::pair<int, int> duty) {
@@ -264,6 +264,6 @@ namespace roboclaw {
         tx_buffer[2] = (unsigned char) ((duty.second >> 8) & 0xFF);
         tx_buffer[3] = (unsigned char) (duty.second & 0xFF);
 
-        txrx(address, 34, tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer), true, false);
+        txrx(address, R_drive_M1M2_signed_duty_cycle, tx_buffer, sizeof(tx_buffer), rx_buffer, sizeof(rx_buffer), true, false);
     }
 }

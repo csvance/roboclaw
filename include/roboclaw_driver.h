@@ -73,7 +73,17 @@ namespace roboclaw {
         size_t txrx(unsigned char address, unsigned char command, unsigned char *tx_data, size_t tx_length,
                     unsigned char *rx_data, size_t rx_length, bool tx_crc = false, bool rx_crc = false);
 
-
+        enum roboclaw_commands {
+            R_read_encoder_count_M1 = 16,
+            R_read_encoder_count_M2 = 17,
+            R_reset_encoders = 20,
+            R_read_firmware_version = 21,
+            R_read_main_battery_voltage_level = 24,
+            R_read_raw_speed_M1 = 30,
+            R_read_raw_speed_M2 = 31,
+            R_drive_M1M2_signed_duty_cycle = 34,
+            R_drive_M1M2_signed_speed = 37,
+            R_read_status = 90};
     };
 
     class crc_exception : public std::runtime_error {

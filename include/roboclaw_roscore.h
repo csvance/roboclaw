@@ -40,12 +40,28 @@ namespace roboclaw {
         roboclaw_roscore(ros::NodeHandle nh, ros::NodeHandle nh_private);
         ~roboclaw_roscore();
 
+        void set_velocity_duty_zero(int index);
+
         void run();
 
     private:
         driver *roboclaw;
 
         std::map<int, unsigned char> roboclaw_mapping;
+
+        bool error_blocking;
+        int error_it_count;
+
+        int motor_1_vel_cmd;
+        int motor_2_vel_cmd;
+
+        int loop_rate;
+        int old_err;
+
+        double blocking_time;
+        double speed_diff_time;
+        double speed_error_factor;
+
 
         ros::NodeHandle nh;
         ros::NodeHandle nh_private;
