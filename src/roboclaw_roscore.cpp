@@ -42,7 +42,7 @@ namespace roboclaw {
             throw std::runtime_error("Must specify serial port");
 
         if(!nh_private.getParam("baudrate", baudrate))
-            baudrate = (int) driver::DEFAULT_BAUDRATE;
+            baudrate = static_cast<int>(driver::DEFAULT_BAUDRATE);
 
         if(!nh_private.getParam("roboclaws", num_roboclaws))
             num_roboclaws = 1;
@@ -54,7 +54,7 @@ namespace roboclaw {
             loop_rate = 50;
 
         if(!nh_private.getParam("error_blocking_time", blocking_time))
-            blocking_time = 10;
+            blocking_time = 10.0;
 
         if(!nh_private.getParam("speed_diff_time", speed_diff_time))
             speed_diff_time = 2.0;
@@ -82,6 +82,9 @@ namespace roboclaw {
         encoder_pub = nh.advertise<roboclaw::RoboclawEncoderSteps>(std::string("motor_enc"), 10);
         input_voltage_pub = nh.advertise<roboclaw::RoboclawInputVoltageMessage>(std::string("roboclaw_input_voltage"), 10);
         velocity_sub = nh.subscribe(std::string("motor_cmd_vel"), 10, &roboclaw_roscore::velocity_callback, this);
+
+        motor_1_vel_cmd = 0;
+        motor_2_vel_cmd = 0;
     }
 
     roboclaw_roscore::~roboclaw_roscore() {
@@ -324,10 +327,14 @@ namespace roboclaw {
                     ROS_ERROR("RoboClaw timout during getting velocity!");
                     continue;
                 }
+
                 int motor_1_speed = abs(velocity.first);
                 int motor_2_speed = abs(velocity.second);
 
-                if (( motor_1_speed < abs(  speed_error_factor * motor_1_vel_cmd )) || (motor_2_speed  < abs( speed_error_factor * motor_2_vel_cmd ))){
+                int motor_1_criteria = static_cast<int>(abs(speed_error_factor * motor_1_vel_cmd));
+                int motor_2_criteria = static_cast<int>(abs(speed_error_factor * motor_2_vel_cmd));
+
+                if (( motor_1_speed < motor_1_criteria ) || (motor_2_speed  < motor_2_vel_cmd )){
                     // if 1 of 2 absolute motor speeds is more than 1 - speed_error_factor different
                     speed_error_count++;
                     if (speed_error_count >= loop_rate*speed_diff_time){
@@ -340,6 +347,8 @@ namespace roboclaw {
                             // Execute once per second and at beginning
 
                             ROS_ERROR("Difference in cmd vel and actual wheel vel has been more than %.2f percent for %.1f seconds! Blocking velocity commands for %.1f seconds.",(1-speed_error_factor)*100,speed_diff_time,blocking_time);
+                            ROS_ERROR("Motor 1 speed: %d // motor_1_vel_cmd %d // motor_1_criteria %d ",motor_1_speed,motor_1_vel_cmd,motor_1_criteria);
+                            ROS_ERROR("Motor 2 speed: %d // motor_2_vel_cmd %d // motor_2_criteria %d ",motor_2_speed,motor_2_vel_cmd,motor_2_criteria);
 
                             set_velocity_duty_zero(r);
                         }
@@ -355,9 +364,14 @@ namespace roboclaw {
                 }
             }
 
-            if (ros::Time::now() - last_message > ros::Duration(5)) {
+            if (ros::Time::now() - last_message > ros::Duration(0.25)) {
                 for (int r = 0; r < roboclaw_mapping.size(); r++) {
                     set_velocity_duty_zero(r);
+
+                    // Also set command velocity to zero to satisfy the speed difference checker
+                    motor_1_vel_cmd = 0;
+                    motor_2_vel_cmd = 0;
+
                 }
             }
         }
