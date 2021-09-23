@@ -42,7 +42,7 @@ namespace roboclaw {
             throw std::runtime_error("Must specify serial port");
 
         if(!nh_private.getParam("baudrate", baudrate))
-            baudrate = (int) driver::DEFAULT_BAUDRATE;
+            baudrate = static_cast<int>(driver::DEFAULT_BAUDRATE);
 
         if(!nh_private.getParam("roboclaws", num_roboclaws))
             num_roboclaws = 1;
@@ -331,8 +331,8 @@ namespace roboclaw {
                 int motor_1_speed = abs(velocity.first);
                 int motor_2_speed = abs(velocity.second);
 
-                int motor_1_criteria = (int) abs(speed_error_factor * motor_1_vel_cmd);
-                int motor_2_criteria = (int) abs(speed_error_factor * motor_2_vel_cmd);
+                int motor_1_criteria = static_cast<int>(abs(speed_error_factor * motor_1_vel_cmd));
+                int motor_2_criteria = static_cast<int>(abs(speed_error_factor * motor_2_vel_cmd));
 
                 if (( motor_1_speed < motor_1_criteria ) || (motor_2_speed  < motor_2_vel_cmd )){
                     // if 1 of 2 absolute motor speeds is more than 1 - speed_error_factor different
