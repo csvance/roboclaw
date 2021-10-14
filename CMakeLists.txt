@@ -114,13 +114,13 @@ generate_messages(
 catkin_package(
   CATKIN_DEPENDS
     geometry_msgs
+    message_runtime
     nav_msgs
     roscpp
     rospy
     sensor_msgs
     std_msgs
     tf
-    message_runtime
 )
 
 ###########
@@ -202,7 +202,7 @@ target_link_libraries(diffdrive_node
         diffdrive_roscore
         )
 
-add_dependencies(diffdrive_roscore roboclaw_generate_messages_cpp)
+add_dependencies(diffdrive_roscore ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 #############
 ## Install ##
 #############
