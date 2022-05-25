@@ -68,6 +68,7 @@ namespace roboclaw {
 
         std::string joint_left_name;
         std::string joint_right_name;
+        std::string base_link_topic;
 
         double joint_left_pos;
         double joint_right_pos;

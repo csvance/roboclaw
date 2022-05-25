@@ -67,22 +67,26 @@ namespace roboclaw {
             throw std::runtime_error("Must specify joint_right_name!");
         }
 
+        if(!nh_private.getParam("base_link_topic", base_link_topic))
+            base_link_topic = "base_link";
+
         if(!nh_private.getParam("swap_motors", swap_motors))
             swap_motors = true;
+
         if(!nh_private.getParam("invert_motor_1", invert_motor_1))
             invert_motor_1 = false;
+
         if(!nh_private.getParam("invert_motor_2", invert_motor_2))
             invert_motor_2 = false;
 
-        if(!nh_private.getParam("var_pos_x", var_pos_x)){
+        if(!nh_private.getParam("var_pos_x", var_pos_x))
             var_pos_x = 0.01;
-        }
-        if(!nh_private.getParam("var_pos_y", var_pos_y)){
+
+        if(!nh_private.getParam("var_pos_y", var_pos_y))
             var_pos_y = 0.01;
-        }
-        if(!nh_private.getParam("var_theta_z", var_theta_z)){
+
+        if(!nh_private.getParam("var_theta_z", var_theta_z))
             var_theta_z = 0.01;
-        }
 
         // Calculate steps/meter for further calculations
         steps_per_meter = counts_per_revolution / ( 2 * wheel_radius * M_PI );
@@ -166,7 +170,7 @@ namespace roboclaw {
         nav_msgs::Odometry odom;
 
         odom.header.frame_id = "odom";
-        odom.child_frame_id = "base_link";
+        odom.child_frame_id = base_link_topic;
 
         // Time
         odom.header.stamp = ros::Time::now();
@@ -198,7 +202,7 @@ namespace roboclaw {
         tf::Transform transform;
         transform.setOrigin(tf::Vector3(last_x, last_y, 0.0));
         transform.setRotation(tf::createQuaternionFromRPY(0.0, 0.0, cur_theta));
-        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", "base_link"));
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", base_link_topic));
 
         odom_pub.publish(odom);
 
