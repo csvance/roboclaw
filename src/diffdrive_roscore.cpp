@@ -67,8 +67,8 @@ namespace roboclaw {
             throw std::runtime_error("Must specify joint_right_name!");
         }
 
-        if(!nh_private.getParam("base_link_topic", base_link_topic))
-            base_link_topic = "base_link";
+        if(!nh_private.getParam("base_link_frame", base_link_frame))
+            base_link_frame = "base_link";
 
         if(!nh_private.getParam("swap_motors", swap_motors))
             swap_motors = true;
@@ -170,7 +170,7 @@ namespace roboclaw {
         nav_msgs::Odometry odom;
 
         odom.header.frame_id = "odom";
-        odom.child_frame_id = base_link_topic;
+        odom.child_frame_id = base_link_frame;
 
         // Time
         odom.header.stamp = ros::Time::now();
@@ -202,7 +202,7 @@ namespace roboclaw {
         tf::Transform transform;
         transform.setOrigin(tf::Vector3(last_x, last_y, 0.0));
         transform.setRotation(tf::createQuaternionFromRPY(0.0, 0.0, cur_theta));
-        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", base_link_topic));
+        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", base_link_frame));
 
         odom_pub.publish(odom);
 
