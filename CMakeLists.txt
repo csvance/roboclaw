@@ -203,6 +203,7 @@ target_link_libraries(diffdrive_node
         )
 
 add_dependencies(diffdrive_roscore ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(roboclaw_roscore ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 #############
 ## Install ##
 #############
